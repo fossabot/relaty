@@ -1,3 +1,9 @@
+use clap::App;
+
 fn main() {
-    println!("Hello, world!");
+    App::new("relrate")
+        .version("0.1.0")
+        .about("Helps you rate stuff")
+        .author("Lichthagel")
+        .get_matches();
 }
