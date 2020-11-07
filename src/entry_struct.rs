@@ -1,3 +1,4 @@
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RateEntry {
     name: String,
     wins: u32,
