@@ -1,9 +1,8 @@
 #[macro_use]
 extern crate serde_derive;
 
-mod entry_struct;
 mod error;
-mod storage;
+mod rate_vec;
 
 use clap::App;
 
