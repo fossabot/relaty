@@ -84,7 +84,6 @@ impl RateVec {
         Ok(())
     }
 
-    // could be improved maybe
     fn random_pair(&mut self) -> Option<(&mut RateEntry, &mut RateEntry)> {
         if self.inner.len() < 2 {
             return None;
@@ -96,16 +95,14 @@ impl RateVec {
             i2 += 1;
         }
 
-        let mut iter = self.inner.iter_mut();
-
         if i1 < i2 {
-            let item1 = iter.nth(i1).unwrap();
-            let item2 = iter.nth(i2 - i1 - 1).unwrap();
-            Some((item1, item2))
+            let (a, b) = self.inner.split_at_mut(i2);
+
+            Some((&mut a[i1], &mut b[0]))
         } else {
-            let item1 = iter.nth(i2).unwrap();
-            let item2 = iter.nth(i1 - i2 - 1).unwrap();
-            Some((item1, item2))
+            let (a, b) = self.inner.split_at_mut(i1);
+
+            Some((&mut b[0], &mut a[i2]))
         }
     }
 }
