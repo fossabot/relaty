@@ -1,6 +1,7 @@
 use crate::error::Error;
 use rand::rngs::ThreadRng;
 use rand::Rng;
+use std::cmp::Ordering;
 use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter};
@@ -82,6 +83,27 @@ impl RateVec {
 
         bincode::serialize_into(writer, &self.inner)?;
         Ok(())
+    }
+
+    fn min_votes(&mut self) -> Vec<&mut RateEntry> {
+        let mut min = u32::max_value();
+        let mut v = Vec::new();
+
+        for item in &mut self.inner {
+            match item.votes.cmp(&min) {
+                Ordering::Less => {
+                    min = item.votes;
+                    v = Vec::new();
+                    v.push(item);
+                }
+                Ordering::Equal => {
+                    v.push(item);
+                }
+                Ordering::Greater => {}
+            }
+        }
+
+        v
     }
 
     fn random_pair(&mut self) -> Option<(&mut RateEntry, &mut RateEntry)> {
