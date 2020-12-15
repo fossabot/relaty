@@ -40,21 +40,21 @@ pub struct RateVec {
 }
 
 impl RateVec {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             inner: Vec::new(),
             rng: rand::thread_rng(),
         }
     }
 
-    fn create(names: Vec<String>) -> Self {
+    pub fn create(names: Vec<String>) -> Self {
         Self {
             inner: names.into_iter().map(|s| RateEntry::new(s, 0, 0)).collect(),
             rng: rand::thread_rng(),
         }
     }
 
-    fn from<P: AsRef<Path>>(file: P) -> Result<Self, io::Error> {
+    pub fn from<P: AsRef<Path>>(file: P) -> Result<Self, io::Error> {
         let f = File::open(file)?;
         let reader = BufReader::new(f);
 
@@ -67,7 +67,7 @@ impl RateVec {
         })
     }
 
-    fn load<P: AsRef<Path>>(file: P) -> Result<Self, Error> {
+    pub fn load<P: AsRef<Path>>(file: P) -> Result<Self, Error> {
         let f = File::open(file)?;
         let reader = BufReader::new(f);
 
@@ -77,7 +77,7 @@ impl RateVec {
         })
     }
 
-    fn save<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
+    pub fn save<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
         let f = File::open(file)?;
         let writer = BufWriter::new(f);
 
@@ -85,7 +85,7 @@ impl RateVec {
         Ok(())
     }
 
-    fn min_votes(&mut self) -> Vec<&mut RateEntry> {
+    pub fn min_votes(&mut self) -> Vec<&mut RateEntry> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
@@ -106,7 +106,7 @@ impl RateVec {
         v
     }
 
-    fn random_pair(&mut self) -> Option<(&mut RateEntry, &mut RateEntry)> {
+    pub fn random_pair(&mut self) -> Option<(&mut RateEntry, &mut RateEntry)> {
         if self.inner.len() < 2 {
             return None;
         }
