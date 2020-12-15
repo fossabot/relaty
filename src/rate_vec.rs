@@ -9,9 +9,9 @@ use std::path::Path;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RateEntry {
-    name: String,
-    wins: u32,
-    votes: u32,
+    pub name: String,
+    pub wins: u32,
+    pub votes: u32,
 }
 
 impl RateEntry {
@@ -34,8 +34,21 @@ impl PartialEq<RateEntry> for &mut RateEntry {
     }
 }
 
+
+impl ToString for RateEntry {
+    fn to_string(&self) -> String {
+        format!(
+            "{} - {}/{} - {}%",
+            self.name,
+            self.wins,
+            self.votes,
+            f64::from(self.wins) * 100.0 / f64::from(self.votes)
+        )
+    }
+}
+
 pub struct RateVec {
-    inner: Vec<RateEntry>,
+    pub inner: Vec<RateEntry>,
     rng: ThreadRng,
 }
 
