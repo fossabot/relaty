@@ -101,6 +101,6 @@ fn print_file(input: &str, output: &str) {
 
     for i in rv.inner.iter() {
         writer.write_all(i.to_string().as_bytes()).unwrap();
-        writer.write_all("\n".as_bytes()).unwrap();
+        writer.write_all(b"\n").unwrap();
     }
 }
