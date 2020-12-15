@@ -78,7 +78,7 @@ impl RateVec {
     }
 
     pub fn save<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
-        let f = File::open(file)?;
+        let f = File::create(file)?;
         let writer = BufWriter::new(f);
 
         bincode::serialize_into(writer, &self.inner)?;
