@@ -4,7 +4,10 @@ extern crate serde_derive;
 mod error;
 mod rate_vec;
 
-use std::{fs, io::{BufRead, BufReader, BufWriter, Write}};
+use std::{
+    fs,
+    io::{BufRead, BufReader, BufWriter, Write},
+};
 
 use clap::{App, Arg, ArgMatches, SubCommand};
 use fs::File;
@@ -67,7 +70,10 @@ fn main() {
 
     if let Some(matches) = matches.subcommand_matches("print") {
         if matches.is_present("output") {
-            print_file(matches.value_of("input").unwrap(), matches.value_of("output").unwrap())
+            print_file(
+                matches.value_of("input").unwrap(),
+                matches.value_of("output").unwrap(),
+            )
         } else {
             print_screen(matches.value_of("input").unwrap())
         }

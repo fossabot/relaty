@@ -34,7 +34,6 @@ impl PartialEq<RateEntry> for &mut RateEntry {
     }
 }
 
-
 impl ToString for RateEntry {
     fn to_string(&self) -> String {
         format!(
