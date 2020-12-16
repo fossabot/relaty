@@ -7,6 +7,7 @@ mod rel_vec;
 use crate::error::Error;
 use clap::{App, Arg, SubCommand, Values};
 use fs::File;
+use regex::Regex;
 use rel_vec::RelVec;
 use std::{
     fs,
@@ -87,6 +88,13 @@ fn main() -> Result<(), Error> {
                         .help("Output file")
                         .takes_value(true)
                         .index(2),
+                )
+                .arg(
+                    Arg::with_name("filter")
+                        .short("f")
+                        .value_name("filter")
+                        .help("Filter items by name")
+                        .takes_value(true),
                 ),
         )
         .subcommand(
@@ -143,9 +151,13 @@ fn main() -> Result<(), Error> {
             return print_file(
                 matches.value_of("input").ok_or(Error::ArgError)?,
                 matches.value_of("output").ok_or(Error::ArgError)?,
+                matches.value_of("filter"),
             );
         } else {
-            return print_screen(matches.value_of("input").ok_or(Error::ArgError)?);
+            return print_screen(
+                matches.value_of("input").ok_or(Error::ArgError)?,
+                matches.value_of("filter"),
+            );
         }
     }
 
@@ -183,22 +195,32 @@ fn from(input: &str, output: &str) -> Result<(), Error> {
     rv.save(output)
 }
 
-fn print_screen(input: &str) -> Result<(), Error> {
-    let rv = RelVec::load(input)?;
+fn print_screen(input: &str, filter: Option<&str>) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+    let re = match filter {
+        Some(filter) => Regex::new(filter)?,
+        None => Regex::new(".*?")?,
+    };
 
-    for i in rv.inner.iter() {
+    rv.sort_percentage();
+    for i in rv.inner.iter().filter(|i| re.is_match(&i.name)) {
         println!("{}", i.to_string());
     }
 
     Ok(())
 }
 
-fn print_file(input: &str, output: &str) -> Result<(), Error> {
-    let rv = RelVec::load(input)?;
+fn print_file(input: &str, output: &str, filter: Option<&str>) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
     let output = File::create(output)?;
     let mut writer = BufWriter::new(output);
+    let re = match filter {
+        Some(filter) => Regex::new(filter)?,
+        None => Regex::new(".*?")?,
+    };
 
-    for i in rv.inner.iter() {
+    rv.sort_percentage();
+    for i in rv.inner.iter().filter(|i| re.is_match(&i.name)) {
         writer.write_all(i.to_string().as_bytes())?;
         writer.write_all(b"\n")?;
     }

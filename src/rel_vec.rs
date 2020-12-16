@@ -117,6 +117,37 @@ impl RelVec {
         self.inner.push(name.into());
     }
 
+    pub fn sort_percentage(&mut self) {
+        self.inner
+            .sort_by(|a: &RelEntry, b: &RelEntry| -> Ordering {
+                let ap = a.percentage();
+                let bp = b.percentage();
+
+                match ap.partial_cmp(&bp) {
+                    Some(ordering) => ordering,
+                    None => {
+                        if ap == f64::NAN {
+                            if bp == f64::NAN {
+                                match a.name.partial_cmp(&b.name) {
+                                    Some(ordering) => ordering,
+                                    None => Ordering::Equal,
+                                }
+                            } else {
+                                Ordering::Less
+                            }
+                        } else if bp == f64::NAN {
+                            Ordering::Greater
+                        } else {
+                            match a.name.partial_cmp(&b.name) {
+                                Some(ordering) => ordering,
+                                None => Ordering::Equal,
+                            }
+                        }
+                    }
+                }
+            })
+    }
+
     pub fn min_votes(&mut self) -> Vec<&mut RelEntry> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
