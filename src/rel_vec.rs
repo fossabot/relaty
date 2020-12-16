@@ -123,20 +123,20 @@ impl RelVec {
                 let ap = a.percentage();
                 let bp = b.percentage();
 
-                match ap.partial_cmp(&bp) {
+                match bp.partial_cmp(&ap) {
                     Some(ordering) => ordering,
                     None => {
-                        if ap == f64::NAN {
-                            if bp == f64::NAN {
+                        if ap.is_nan() {
+                            if bp.is_nan() {
                                 match a.name.partial_cmp(&b.name) {
                                     Some(ordering) => ordering,
                                     None => Ordering::Equal,
                                 }
                             } else {
-                                Ordering::Less
+                                Ordering::Greater
                             }
-                        } else if bp == f64::NAN {
-                            Ordering::Greater
+                        } else if bp.is_nan() {
+                            Ordering::Less
                         } else {
                             match a.name.partial_cmp(&b.name) {
                                 Some(ordering) => ordering,
