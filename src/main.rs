@@ -8,12 +8,12 @@ use std::{
     fs,
     io::{BufRead, BufReader, BufWriter, Write},
 };
-
-use clap::{App, Arg, ArgMatches, SubCommand};
+use crate::error::Error;
+use clap::{App, Arg, SubCommand};
 use fs::File;
 use rate_vec::RateVec;
 
-fn main() {
+fn main() -> Result<(), Error> {
     let matches = App::new("relaty")
         .version("0.1.0")
         .about("Helps you sort and rate stuff")
@@ -64,49 +64,58 @@ fn main() {
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("from") {
-        from(&matches);
-        return;
+        return from(
+            matches
+                .value_of("input")
+                .ok_or(Error::ArgError)?,
+            matches
+                .value_of("output")
+                .ok_or(Error::ArgError)?,
+        );
     }
 
     if let Some(matches) = matches.subcommand_matches("print") {
         if matches.is_present("output") {
-            print_file(
-                matches.value_of("input").unwrap(),
-                matches.value_of("output").unwrap(),
-            )
+            return print_file(
+                matches.value_of("input").ok_or(Error::ArgError)?,
+                matches.value_of("output").ok_or(Error::ArgError)?,
+            );
         } else {
-            print_screen(matches.value_of("input").unwrap())
+            return print_screen(matches.value_of("input").ok_or(Error::ArgError)?);
         }
     }
+
+    Ok(())
 }
 
-fn from(matches: &ArgMatches) {
-    let input = matches.value_of("input").unwrap();
-    let output = matches.value_of("output").unwrap();
-
-    let input = File::open(input).unwrap();
+fn from(input: &str, output: &str) -> Result<(), Error> {
+    let input = File::open(input)?;
     let bufreader = BufReader::new(input);
 
-    let rv = RateVec::create(bufreader.lines().map(|s| s.unwrap()).collect());
+    let rv = RateVec::create(bufreader.lines().map(|i| i.unwrap()).collect()); // TODO remove unwrap
 
-    rv.save(output).unwrap();
+    rv.save(output)
 }
 
-fn print_screen(input: &str) {
-    let rv = RateVec::load(input).unwrap();
+fn print_screen(input: &str) -> Result<(), Error> {
+    let rv = RateVec::load(input)?;
 
     for i in rv.inner.iter() {
         println!("{}", i.to_string());
     }
+
+    Ok(())
 }
 
-fn print_file(input: &str, output: &str) {
-    let rv = RateVec::load(input).unwrap();
-    let output = File::create(output).unwrap();
+fn print_file(input: &str, output: &str) -> Result<(), Error> {
+    let rv = RateVec::load(input)?;
+    let output = File::create(output)?;
     let mut writer = BufWriter::new(output);
 
     for i in rv.inner.iter() {
-        writer.write_all(i.to_string().as_bytes()).unwrap();
-        writer.write_all(b"\n").unwrap();
+        writer.write_all(i.to_string().as_bytes())?;
+        writer.write_all(b"\n")?;
     }
+
+    Ok(())
 }
