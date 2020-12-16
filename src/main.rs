@@ -127,6 +127,36 @@ fn main() -> Result<(), Error> {
                         .index(2),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("remove")
+                .about("Remove elements from a list")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("filter")
+                        .value_name("FILTER")
+                        .help("Filter")
+                        .required(true)
+                        .takes_value(true)
+                        .index(2),
+                ),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("new") {
@@ -163,15 +193,19 @@ fn main() -> Result<(), Error> {
 
     if let Some(matches) = matches.subcommand_matches("add") {
         let input = matches.value_of("file").ok_or(Error::ArgError)?;
-        let output = if matches.is_present("output") {
-            matches.value_of("output").ok_or(Error::ArgError)?
-        } else {
-            input
-        };
+        let output = matches.value_of("output").unwrap_or(input);
 
         if let Some(items) = matches.values_of("item") {
             return add(input, output, items);
         }
+    }
+
+    if let Some(matches) = matches.subcommand_matches("remove") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+        let output = matches.value_of("output").unwrap_or(input);
+        let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
+
+        return remove(input, output, filter);
     }
 
     Ok(())
@@ -235,5 +269,14 @@ fn add(input: &str, output: &str, items: Values) -> Result<(), Error> {
         rv.add(i.to_owned());
     }
 
+    rv.save(output)
+}
+
+fn remove(input: &str, output: &str, filter: &str) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+    let re = Regex::new(filter)?;
+    
+    rv.remove(|i| re.is_match(&i.name));
+    
     rv.save(output)
 }

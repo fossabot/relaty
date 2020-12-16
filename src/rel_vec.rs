@@ -117,6 +117,10 @@ impl RelVec {
         self.inner.push(name.into());
     }
 
+    pub fn remove<F: FnMut(&RelEntry) -> bool>(&mut self, mut filter: F) {
+        self.inner.retain(|i| !filter(i))
+    }
+
     pub fn sort_percentage(&mut self) {
         self.inner
             .sort_by(|a: &RelEntry, b: &RelEntry| -> Ordering {
