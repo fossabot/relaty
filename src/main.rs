@@ -11,7 +11,7 @@ use regex::Regex;
 use rel_vec::RelVec;
 use std::{
     fs,
-    io::{BufWriter, Write},
+    io::{self, BufWriter, Write},
 };
 
 fn main() -> Result<(), Error> {
@@ -157,6 +157,37 @@ fn main() -> Result<(), Error> {
                         .index(2),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("vote")
+                .about("Vote several times")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("rounds")
+                        .short("r")
+                        .value_name("ROUNDS")
+                        .help("Number of rounds")
+                        .takes_value(true)
+                        .index(2)
+                        .default_value("10"),
+                ),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("new") {
@@ -206,6 +237,17 @@ fn main() -> Result<(), Error> {
         let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
 
         return remove(input, output, filter);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("vote") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+        let output = matches.value_of("output").unwrap_or(input);
+        let rounds = matches
+            .value_of("rounds")
+            .ok_or(Error::ArgError)?
+            .parse::<u32>()?;
+
+        return vote(input, output, rounds);
     }
 
     Ok(())
@@ -275,8 +317,57 @@ fn add(input: &str, output: &str, items: Values) -> Result<(), Error> {
 fn remove(input: &str, output: &str, filter: &str) -> Result<(), Error> {
     let mut rv = RelVec::load(input)?;
     let re = Regex::new(filter)?;
-    
+
     rv.remove(|i| re.is_match(&i.name));
-    
+
+    rv.save(output)
+}
+
+fn vote(input: &str, output: &str, rounds: u32) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+    let reader = io::stdin();
+
+    for _ in 0..rounds {
+        let (a, b) = rv.random_pair().ok_or(Error::ArgError)?;
+
+        println!("{} vs. {}", rv[a].name, rv[b].name);
+        println!("");
+        println!("1 - Vote for {}", rv[a].name);
+        println!("2 - Vote for {}", rv[b].name);
+        println!("o - Can't decide");
+        println!("x - Remove {}", rv[a].name);
+        println!("y - Remove {}", rv[b].name);
+        print!("$ ");
+
+        io::stdout().flush()?;
+
+        let mut cmd = String::new();
+        let _s = reader.read_line(&mut cmd)?;
+
+        match cmd.chars().next() {
+            Some(c) => {
+                if c == '1' {
+                    rv[a].wins += 1;
+                    rv[a].votes += 1;
+                    rv[b].votes += 1;
+                } else if c == '2' {
+                    rv[b].wins += 1;
+                    rv[a].votes += 1;
+                    rv[b].votes += 1;
+                } else if c == 'o' {
+                } else if c == 'x' {
+                    rv.inner.remove(a);
+                } else if c == 'y' {
+                    rv.inner.remove(b);
+                } else {
+                    println!("unknown command");
+                }
+            }
+            None => {}
+        }
+
+        println!("======================");
+    }
+
     rv.save(output)
 }

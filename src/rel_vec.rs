@@ -1,11 +1,14 @@
 use crate::error::Error;
 use rand::rngs::ThreadRng;
 use rand::Rng;
-use std::io;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::{cmp::Ordering, io::Read};
 use std::{fs::File, io::Write};
+use std::{
+    io,
+    ops::{Index, IndexMut},
+};
 
 static FILE_PREFIX: [u8; 2] = [173, 42];
 
@@ -152,7 +155,7 @@ impl RelVec {
             })
     }
 
-    pub fn min_votes(&mut self) -> Vec<&mut RelEntry> {
+    pub fn _min_votes(&mut self) -> Vec<&mut RelEntry> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
@@ -173,7 +176,7 @@ impl RelVec {
         v
     }
 
-    pub fn random_pair(&mut self) -> Option<(&mut RelEntry, &mut RelEntry)> {
+    pub fn random_pair(&mut self) -> Option<(usize, usize)> {
         if self.inner.len() < 2 {
             return None;
         }
@@ -184,7 +187,9 @@ impl RelVec {
             i2 += 1;
         }
 
-        if i1 < i2 {
+        Some((i1, i2))
+
+        /*if i1 < i2 {
             let (a, b) = self.inner.split_at_mut(i2);
 
             Some((&mut a[i1], &mut b[0]))
@@ -192,13 +197,39 @@ impl RelVec {
             let (a, b) = self.inner.split_at_mut(i1);
 
             Some((&mut b[0], &mut a[i2]))
-        }
+        }*/
     }
 }
 
 impl PartialEq for RelVec {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
+    }
+}
+
+impl AsRef<Vec<RelEntry>> for RelVec {
+    fn as_ref(&self) -> &Vec<RelEntry> {
+        &self.inner
+    }
+}
+
+impl AsMut<Vec<RelEntry>> for RelVec {
+    fn as_mut(&mut self) -> &mut Vec<RelEntry> {
+        &mut self.inner
+    }
+}
+
+impl Index<usize> for RelVec {
+    type Output = RelEntry;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.inner[index]
+    }
+}
+
+impl IndexMut<usize> for RelVec {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        &mut self.inner[index]
     }
 }
 
