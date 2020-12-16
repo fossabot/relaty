@@ -26,10 +26,11 @@ fn main() -> Result<(), Error> {
                 .arg(
                     Arg::with_name("output")
                         .short("o")
-                        .value_name("FILE")
+                        .value_name("OUTPUT")
                         .help("Output file")
                         .required(true)
-                        .takes_value(true),
+                        .takes_value(true)
+                        .index(1),
                 )
                 .arg(
                     Arg::with_name("item")
@@ -37,7 +38,8 @@ fn main() -> Result<(), Error> {
                         .value_name("ITEM")
                         .help("Insert item")
                         .takes_value(true)
-                        .multiple(true),
+                        .multiple(true)
+                        .index(2),
                 ),
         )
         .subcommand(
@@ -48,18 +50,20 @@ fn main() -> Result<(), Error> {
                 .arg(
                     Arg::with_name("input")
                         .short("i")
-                        .value_name("FILE")
+                        .value_name("OUTPUT")
                         .help("Input file")
                         .required(true)
-                        .takes_value(true),
+                        .takes_value(true)
+                        .index(1),
                 )
                 .arg(
                     Arg::with_name("output")
                         .short("o")
-                        .value_name("FILE")
+                        .value_name("OUTPUT")
                         .help("Output file")
                         .required(true)
-                        .takes_value(true),
+                        .takes_value(true)
+                        .index(2),
                 ),
         )
         .subcommand(
@@ -70,17 +74,19 @@ fn main() -> Result<(), Error> {
                 .arg(
                     Arg::with_name("input")
                         .short("i")
-                        .value_name("FILE")
+                        .value_name("INPUT")
                         .help("Input file")
                         .required(true)
-                        .takes_value(true),
+                        .takes_value(true)
+                        .index(1),
                 )
                 .arg(
                     Arg::with_name("output")
                         .short("o")
-                        .value_name("FILE")
+                        .value_name("OUTPUT")
                         .help("Output file")
-                        .takes_value(true),
+                        .takes_value(true)
+                        .index(2),
                 ),
         )
         .get_matches();

@@ -11,12 +11,12 @@ You may use `relaty <CMD> --help` to see information on the usage of different c
 
 ### new
 
-`relaty new -o <FILE>` creates an empty storage file
+`relaty new <OUTPUT> [ITEMS...]` creates an empty storage file
 
 ### from
 
-`relaty from -i <FILE> -o <FILE>` creates a storage file from an existing text file. Each line will get an own entry.
+`relaty from <INPUT> <OUTPUT>` creates a storage file from an existing text file. Each line will get an own entry.
 
 ### print
 
-`relaty print -i <FILE> [-o <FILE>]` prints a storage file to screen or to a file showing wins, votes and win percentage.
+`relaty print <INPUT> [OUTPUT]` prints a storage file to screen or to a file showing wins, votes and win percentage.
