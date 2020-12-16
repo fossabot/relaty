@@ -1,11 +1,13 @@
 use crate::error::Error;
 use rand::rngs::ThreadRng;
 use rand::Rng;
-use std::cmp::Ordering;
-use std::fs::File;
 use std::io;
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
+use std::{cmp::Ordering, io::Read};
+use std::{fs::File, io::Write};
+
+static FILE_PREFIX: [u8;2] = [173,42];
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RelEntry {
@@ -74,7 +76,16 @@ impl RelVec {
 
     pub fn load<P: AsRef<Path>>(file: P) -> Result<Self, Error> {
         let f = File::open(file)?;
-        let reader = BufReader::new(f);
+        let mut reader = BufReader::new(f);
+
+        {
+            let mut buf = [0u8; 2];
+            reader.read(&mut buf)?;
+
+            if buf != FILE_PREFIX {
+                return Err(Error::InvalidFileError);
+            }
+        }
 
         Ok(Self {
             inner: bincode::deserialize_from(reader)?,
@@ -84,7 +95,9 @@ impl RelVec {
 
     pub fn save<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
         let f = File::create(file)?;
-        let writer = BufWriter::new(f);
+        let mut writer = BufWriter::new(f);
+
+        writer.write(&FILE_PREFIX)?;
 
         bincode::serialize_into(writer, &self.inner)?;
         Ok(())
