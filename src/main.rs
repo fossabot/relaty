@@ -2,12 +2,12 @@
 extern crate serde_derive;
 
 mod error;
-mod rate_vec;
+mod rel_vec;
 
 use crate::error::Error;
 use clap::{App, Arg, SubCommand};
 use fs::File;
-use rate_vec::RateVec;
+use rel_vec::RelVec;
 use std::{
     fs,
     io::{BufWriter, Write},
@@ -103,19 +103,19 @@ fn main() -> Result<(), Error> {
 }
 
 fn new(output: &str) -> Result<(), Error> {
-    let rv = RateVec::new();
+    let rv = RelVec::new();
 
     rv.save(output)
 }
 
 fn from(input: &str, output: &str) -> Result<(), Error> {
-    let rv = RateVec::from(input)?;
+    let rv = RelVec::from(input)?;
 
     rv.save(output)
 }
 
 fn print_screen(input: &str) -> Result<(), Error> {
-    let rv = RateVec::load(input)?;
+    let rv = RelVec::load(input)?;
 
     for i in rv.inner.iter() {
         println!("{}", i.to_string());
@@ -125,7 +125,7 @@ fn print_screen(input: &str) -> Result<(), Error> {
 }
 
 fn print_file(input: &str, output: &str) -> Result<(), Error> {
-    let rv = RateVec::load(input)?;
+    let rv = RelVec::load(input)?;
     let output = File::create(output)?;
     let mut writer = BufWriter::new(output);
 

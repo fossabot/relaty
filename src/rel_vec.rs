@@ -8,25 +8,25 @@ use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct RateEntry {
+pub struct RelEntry {
     pub name: String,
     pub wins: u32,
     pub votes: u32,
 }
 
-impl RateEntry {
-    pub fn new(name: String, wins: u32, votes: u32) -> RateEntry {
-        RateEntry { name, wins, votes }
+impl RelEntry {
+    pub fn new(name: String, wins: u32, votes: u32) -> RelEntry {
+        RelEntry { name, wins, votes }
     }
 }
 
-impl PartialEq for RateEntry {
+impl PartialEq for RelEntry {
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
     }
 }
 
-impl ToString for RateEntry {
+impl ToString for RelEntry {
     fn to_string(&self) -> String {
         format!(
             "{} - {}/{} - {}%",
@@ -39,12 +39,12 @@ impl ToString for RateEntry {
 }
 
 #[derive(Clone, Debug)]
-pub struct RateVec {
-    pub inner: Vec<RateEntry>,
+pub struct RelVec {
+    pub inner: Vec<RelEntry>,
     rng: ThreadRng,
 }
 
-impl RateVec {
+impl RelVec {
     pub fn new() -> Self {
         Self {
             inner: Vec::new(),
@@ -54,7 +54,7 @@ impl RateVec {
 
     pub fn create(names: Vec<String>) -> Self {
         Self {
-            inner: names.into_iter().map(|s| RateEntry::new(s, 0, 0)).collect(),
+            inner: names.into_iter().map(|s| RelEntry::new(s, 0, 0)).collect(),
             rng: rand::thread_rng(),
         }
     }
@@ -66,8 +66,8 @@ impl RateVec {
         Ok(Self {
             inner: reader
                 .lines()
-                .map(|r| r.map(|s| RateEntry::new(s, 0, 0)))
-                .collect::<Result<Vec<RateEntry>, io::Error>>()?,
+                .map(|r| r.map(|s| RelEntry::new(s, 0, 0)))
+                .collect::<Result<Vec<RelEntry>, io::Error>>()?,
             rng: rand::thread_rng(),
         })
     }
@@ -90,7 +90,7 @@ impl RateVec {
         Ok(())
     }
 
-    pub fn min_votes(&mut self) -> Vec<&mut RateEntry> {
+    pub fn min_votes(&mut self) -> Vec<&mut RelEntry> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
@@ -111,7 +111,7 @@ impl RateVec {
         v
     }
 
-    pub fn random_pair(&mut self) -> Option<(&mut RateEntry, &mut RateEntry)> {
+    pub fn random_pair(&mut self) -> Option<(&mut RelEntry, &mut RelEntry)> {
         if self.inner.len() < 2 {
             return None;
         }
@@ -134,7 +134,7 @@ impl RateVec {
     }
 }
 
-impl PartialEq for RateVec {
+impl PartialEq for RelVec {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
     }
@@ -147,28 +147,28 @@ mod tests {
         io::{BufWriter, Write},
     };
 
-    use super::{RateEntry, RateVec};
+    use super::{RelEntry, RelVec};
 
     #[test]
-    fn rate_entry_new() {
+    fn rel_entry_new() {
         assert_eq!(
-            RateEntry {
+            RelEntry {
                 name: "abc".to_owned(),
                 wins: 125132,
                 votes: 12551
             },
-            RateEntry::new("abc".to_owned(), 125132, 12551)
+            RelEntry::new("abc".to_owned(), 125132, 12551)
         )
     }
 
     #[test]
-    fn rate_entry_partial_eq() {
-        let a = RateEntry {
+    fn rel_entry_partial_eq() {
+        let a = RelEntry {
             name: "abc".to_owned(),
             wins: 125132,
             votes: 1263,
         };
-        let b = RateEntry {
+        let b = RelEntry {
             name: "abc".to_owned(),
             wins: 1251,
             votes: 1361621,
@@ -178,8 +178,8 @@ mod tests {
     }
 
     #[test]
-    fn rate_entry_to_string() {
-        let a = RateEntry {
+    fn rel_entry_to_string() {
+        let a = RelEntry {
             name: "abc".to_owned(),
             wins: 12,
             votes: 36,
@@ -189,50 +189,50 @@ mod tests {
     }
 
     #[test]
-    fn rate_vec_new() {
-        let a = RateVec {
+    fn rel_vec_new() {
+        let a = RelVec {
             inner: Vec::new(),
             rng: rand::thread_rng(),
         };
-        let b = RateVec::new();
+        let b = RelVec::new();
 
         assert_eq!(a, b);
     }
 
     #[test]
-    fn rate_vec_create() {
-        let a = RateVec {
+    fn rel_vec_create() {
+        let a = RelVec {
             inner: Vec::from([
-                RateEntry::new("abc".to_string(), 1251, 16162),
-                RateEntry::new("adsga".to_string(), 1251, 1236),
+                RelEntry::new("abc".to_string(), 1251, 16162),
+                RelEntry::new("adsga".to_string(), 1251, 1236),
             ]),
             rng: rand::thread_rng(),
         };
-        let b = RateVec::create(Vec::from(["abc".to_string(), "adsga".to_string()]));
+        let b = RelVec::create(Vec::from(["abc".to_string(), "adsga".to_string()]));
 
         assert_eq!(a, b);
     }
 
     #[test]
-    fn rate_vec_from() {
-        let file = File::create("_rate_vec_from.txt").unwrap();
+    fn rel_vec_from() {
+        let file = File::create("_rel_vec_from.txt").unwrap();
         let mut writer = BufWriter::new(file);
 
         writer.write_all(b"a\nb\nc\n").unwrap();
 
         drop(writer);
 
-        let a = RateVec::create(["a".to_string(), "b".to_string(), "c".to_string()].to_vec());
-        let b = RateVec::from("_rate_vec_from.txt").unwrap();
+        let a = RelVec::create(["a".to_string(), "b".to_string(), "c".to_string()].to_vec());
+        let b = RelVec::from("_rel_vec_from.txt").unwrap();
 
-        fs::remove_file("_rate_vec_from.txt").unwrap();
+        fs::remove_file("_rel_vec_from.txt").unwrap();
 
         assert_eq!(a, b);
     }
 
     #[test]
-    fn rate_vec_load() {
-        let file = File::create("_rate_vec_load.txt").unwrap();
+    fn rel_vec_load() {
+        let file = File::create("_rel_vec_load.txt").unwrap();
         let mut writer = BufWriter::new(file);
 
         writer
@@ -244,45 +244,45 @@ mod tests {
 
         drop(writer);
 
-        let a = RateVec::create(["abc".to_string()].to_vec());
-        let b = RateVec::load("_rate_vec_load.txt").unwrap();
+        let a = RelVec::create(["abc".to_string()].to_vec());
+        let b = RelVec::load("_rel_vec_load.txt").unwrap();
 
-        fs::remove_file("_rate_vec_load.txt").unwrap();
+        fs::remove_file("_rel_vec_load.txt").unwrap();
 
         assert_eq!(a, b);
     }
 
     #[test]
-    fn rate_vec_save() {
-        let rv = RateVec::create(["abc".to_string()].to_vec());
-        rv.save("_rate_vec_save.txt").unwrap();
+    fn rel_vec_save() {
+        let rv = RelVec::create(["abc".to_string()].to_vec());
+        rv.save("_rel_vec_save.txt").unwrap();
 
         let a: [u8; 27] = [
             0x1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x61,
             0x62, 0x63, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
         ];
-        let b = fs::read("_rate_vec_save.txt").unwrap();
+        let b = fs::read("_rel_vec_save.txt").unwrap();
 
-        fs::remove_file("_rate_vec_save.txt").unwrap();
+        fs::remove_file("_rel_vec_save.txt").unwrap();
 
         assert_eq!(&a, b.as_slice());
     }
 
     #[test]
-    fn rate_vec_min_votes() {
-        let mut rv = RateVec {
+    fn rel_vec_min_votes() {
+        let mut rv = RelVec {
             inner: [
-                RateEntry {
+                RelEntry {
                     name: "abc".to_string(),
                     wins: 12,
                     votes: 123,
                 },
-                RateEntry {
+                RelEntry {
                     name: "bcd".to_string(),
                     wins: 125,
                     votes: 123,
                 },
-                RateEntry {
+                RelEntry {
                     name: "cde".to_string(),
                     wins: 12,
                     votes: 12632,
@@ -295,12 +295,12 @@ mod tests {
         assert_eq!(
             rv.min_votes(),
             Vec::from([
-                &mut RateEntry {
+                &mut RelEntry {
                     name: "abc".to_string(),
                     wins: 12,
                     votes: 123,
                 },
-                &mut RateEntry {
+                &mut RelEntry {
                     name: "bcd".to_string(),
                     wins: 125,
                     votes: 123
@@ -310,15 +310,15 @@ mod tests {
     }
 
     #[test]
-    fn rate_vec_random_pair() {
-        let mut rv = RateVec {
+    fn rel_vec_random_pair() {
+        let mut rv = RelVec {
             inner: [
-                RateEntry {
+                RelEntry {
                     name: "abc".to_string(),
                     wins: 0,
                     votes: 0,
                 },
-                RateEntry {
+                RelEntry {
                     name: "def".to_string(),
                     wins: 0,
                     votes: 0,
@@ -330,12 +330,12 @@ mod tests {
 
         let (a, b) = rv.random_pair().unwrap();
         let (c, d) = (
-            &mut RateEntry {
+            &mut RelEntry {
                 name: "abc".to_string(),
                 wins: 0,
                 votes: 0,
             },
-            &mut RateEntry {
+            &mut RelEntry {
                 name: "def".to_string(),
                 wins: 0,
                 votes: 0,
