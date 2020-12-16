@@ -40,6 +40,12 @@ impl ToString for RelEntry {
     }
 }
 
+impl From<String> for RelEntry {
+    fn from(s: String) -> Self {
+        Self::new(s, 0, 0)
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct RelVec {
     pub inner: Vec<RelEntry>,
@@ -101,6 +107,10 @@ impl RelVec {
 
         bincode::serialize_into(writer, &self.inner)?;
         Ok(())
+    }
+
+    pub fn add(&mut self, name: String) {
+        self.inner.push(name.into());
     }
 
     pub fn min_votes(&mut self) -> Vec<&mut RelEntry> {
@@ -199,6 +209,18 @@ mod tests {
         };
 
         assert_eq!(a.to_string(), "abc - 12/36 - 33.333333333333336%");
+    }
+
+    #[test]
+    fn rel_entry_from_string() {
+        let a = RelEntry {
+            name: "abc".to_owned(),
+            wins: 0,
+            votes: 0,
+        };
+        let b = "abc".to_owned().into();
+
+        assert_eq!(a, b);
     }
 
     #[test]

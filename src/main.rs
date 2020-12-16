@@ -5,7 +5,7 @@ mod error;
 mod rel_vec;
 
 use crate::error::Error;
-use clap::{App, Arg, SubCommand};
+use clap::{App, Arg, SubCommand, Values};
 use fs::File;
 use rel_vec::RelVec;
 use std::{
@@ -89,6 +89,36 @@ fn main() -> Result<(), Error> {
                         .index(2),
                 ),
         )
+        .subcommand(
+            SubCommand::with_name("add")
+                .about("Add elements to a storage file")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("input")
+                        .short("i")
+                        .value_name("INPUT")
+                        .help("Input file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("item")
+                        .value_name("ITEM")
+                        .help("Item to add")
+                        .multiple(true)
+                        .takes_value(true)
+                        .index(2),
+                ),
+        )
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("new") {
@@ -116,6 +146,19 @@ fn main() -> Result<(), Error> {
             );
         } else {
             return print_screen(matches.value_of("input").ok_or(Error::ArgError)?);
+        }
+    }
+
+    if let Some(matches) = matches.subcommand_matches("add") {
+        let input = matches.value_of("input").ok_or(Error::ArgError)?;
+        let output = if matches.is_present("output") {
+            matches.value_of("output").ok_or(Error::ArgError)?
+        } else {
+            input
+        };
+
+        if let Some(items) = matches.values_of("item") {
+            return add(input, output, items);
         }
     }
 
@@ -161,4 +204,14 @@ fn print_file(input: &str, output: &str) -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+fn add(input: &str, output: &str, items: Values) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+
+    for i in items {
+        rv.add(i.to_owned());
+    }
+
+    rv.save(output)
 }
