@@ -398,7 +398,7 @@ mod tests {
         };
 
         assert_eq!(
-            rv.min_votes(),
+            rv._min_votes(),
             Vec::from([
                 &mut RelEntry {
                     name: "abc".to_string(),
@@ -434,19 +434,7 @@ mod tests {
         };
 
         let (a, b) = rv.random_pair().unwrap();
-        let (c, d) = (
-            &mut RelEntry {
-                name: "abc".to_string(),
-                wins: 0,
-                votes: 0,
-            },
-            &mut RelEntry {
-                name: "def".to_string(),
-                wins: 0,
-                votes: 0,
-            },
-        );
 
-        assert!((&a, &b) == (&c, &d) || (&a, &b) == (&d, &c));
+        assert!((a,b) == (0,1) || (a, b) == (1,0));
     }
 }
