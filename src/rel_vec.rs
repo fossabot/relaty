@@ -20,6 +20,10 @@ impl RelEntry {
     pub fn new(name: String, wins: u32, votes: u32) -> RelEntry {
         RelEntry { name, wins, votes }
     }
+
+    pub fn percentage(&self) -> f64 {
+        f64::from(self.wins) * 100.0 / f64::from(self.votes)
+    }
 }
 
 impl PartialEq for RelEntry {
@@ -35,7 +39,7 @@ impl ToString for RelEntry {
             self.name,
             self.wins,
             self.votes,
-            f64::from(self.wins) * 100.0 / f64::from(self.votes)
+            self.percentage()
         )
     }
 }
