@@ -10,7 +10,7 @@ use fs::File;
 use rate_vec::RateVec;
 use std::{
     fs,
-    io::{BufRead, BufReader, BufWriter, Write},
+    io::{BufWriter, Write},
 };
 
 fn main() -> Result<(), Error> {
