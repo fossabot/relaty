@@ -73,10 +73,10 @@ fn main() -> Result<(), Error> {
                 .version("0.1.0")
                 .author("Lichthagle <lichthagel@tuta.io>")
                 .arg(
-                    Arg::with_name("input")
-                        .short("i")
-                        .value_name("INPUT")
-                        .help("Input file")
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
                         .required(true)
                         .takes_value(true)
                         .index(1),
@@ -103,10 +103,10 @@ fn main() -> Result<(), Error> {
                 .version("0.1.0")
                 .author("Lichthagel <lichthagel@tuta.io>")
                 .arg(
-                    Arg::with_name("input")
-                        .short("i")
-                        .value_name("INPUT")
-                        .help("Input file")
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
                         .required(true)
                         .takes_value(true)
                         .index(1),
@@ -149,20 +149,20 @@ fn main() -> Result<(), Error> {
     if let Some(matches) = matches.subcommand_matches("print") {
         if matches.is_present("output") {
             return print_file(
-                matches.value_of("input").ok_or(Error::ArgError)?,
+                matches.value_of("file").ok_or(Error::ArgError)?,
                 matches.value_of("output").ok_or(Error::ArgError)?,
                 matches.value_of("filter"),
             );
         } else {
             return print_screen(
-                matches.value_of("input").ok_or(Error::ArgError)?,
+                matches.value_of("file").ok_or(Error::ArgError)?,
                 matches.value_of("filter"),
             );
         }
     }
 
     if let Some(matches) = matches.subcommand_matches("add") {
-        let input = matches.value_of("input").ok_or(Error::ArgError)?;
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
         let output = if matches.is_present("output") {
             matches.value_of("output").ok_or(Error::ArgError)?
         } else {
