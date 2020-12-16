@@ -30,6 +30,14 @@ fn main() -> Result<(), Error> {
                         .help("Output file")
                         .required(true)
                         .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("item")
+                        .short("i")
+                        .value_name("ITEM")
+                        .help("Insert item")
+                        .takes_value(true)
+                        .multiple(true),
                 ),
         )
         .subcommand(
@@ -78,7 +86,13 @@ fn main() -> Result<(), Error> {
         .get_matches();
 
     if let Some(matches) = matches.subcommand_matches("new") {
-        return new(matches.value_of("output").ok_or(Error::ArgError)?);
+        if let Some(items) = matches.values_of("item") {
+            let items = items.collect();
+
+            return create(matches.value_of("output").ok_or(Error::ArgError)?, items);
+        } else {
+            return new(matches.value_of("output").ok_or(Error::ArgError)?);
+        }
     }
 
     if let Some(matches) = matches.subcommand_matches("from") {
@@ -104,6 +118,12 @@ fn main() -> Result<(), Error> {
 
 fn new(output: &str) -> Result<(), Error> {
     let rv = RelVec::new();
+
+    rv.save(output)
+}
+
+fn create(output: &str, items: Vec<&str>) -> Result<(), Error> {
+    let rv = RelVec::create(items.into_iter().map(|i| i.to_owned()).collect());
 
     rv.save(output)
 }
