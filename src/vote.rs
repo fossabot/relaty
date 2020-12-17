@@ -8,17 +8,19 @@ use crate::{error::Error, rel_vec::RelVec};
 pub enum VoteStrategy {
     Random,
     OneMin,
+    Equal,
 }
 
 impl VoteStrategy {
-    pub fn strategies() -> [&'static str; 2] {
-        ["random", "onemin"]
+    pub fn strategies() -> [&'static str; 3] {
+        ["random", "onemin", "equal"]
     }
 
     pub fn choose_function(&self) -> Box<dyn FnMut(&mut RelVec) -> Option<(usize, usize)>> {
         match self {
             VoteStrategy::Random => Box::new(RelVec::random_pair),
-            VoteStrategy::OneMin => Box::new(RelVec::min_pair)
+            VoteStrategy::OneMin => Box::new(RelVec::min_pair),
+            VoteStrategy::Equal => Box::new(RelVec::equal_pair)
         }
     }
 }
@@ -28,6 +30,7 @@ impl ToString for VoteStrategy {
         match self {
             VoteStrategy::Random => "random".to_owned(),
             VoteStrategy::OneMin => "onemin".to_owned(),
+            VoteStrategy::Equal => "equal".to_owned()
         }
     }
 }
@@ -39,6 +42,7 @@ impl TryFrom<&str> for VoteStrategy {
         match value {
             "random" => Ok(VoteStrategy::Random),
             "onemin" => Ok(VoteStrategy::OneMin),
+            "equal" => Ok(VoteStrategy::Equal),
             _ => Err(Error::ArgError),
         }
     }

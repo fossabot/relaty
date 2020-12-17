@@ -1,6 +1,6 @@
 use crate::error::Error;
-use rand::rngs::ThreadRng;
 use rand::Rng;
+use rand::{prelude::SliceRandom, rngs::ThreadRng};
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::{cmp::Ordering, io::Read};
@@ -203,6 +203,25 @@ impl RelVec {
         } else {
             Some((i1, i2))
         }
+    }
+
+    pub fn equal_pair(&mut self) -> Option<(usize, usize)> {
+        if self.inner.len() < 2 {
+            return None;
+        }
+
+        self.inner.shuffle(&mut self.rng);
+
+        for i1 in 0..self.inner.len() {
+            if let Some(i2) = self
+                .inner
+                .iter()
+                .position(|e| e.percentage() == self[i1].percentage() && e != &self[i1])
+            {
+                return Some((i1, i2));
+            }
+        }
+        None
     }
 }
 
