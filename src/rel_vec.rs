@@ -93,7 +93,7 @@ impl RelVec {
 
         {
             let mut buf = [0u8; 2];
-            reader.read(&mut buf)?;
+            reader.read_exact(&mut buf)?;
 
             if buf != FILE_PREFIX {
                 return Err(Error::InvalidFileError);
@@ -110,7 +110,7 @@ impl RelVec {
         let f = File::create(file)?;
         let mut writer = BufWriter::new(f);
 
-        writer.write(&FILE_PREFIX)?;
+        writer.write_all(&FILE_PREFIX)?;
 
         bincode::serialize_into(writer, &self.inner)?;
         Ok(())
@@ -213,11 +213,9 @@ impl RelVec {
         self.inner.shuffle(&mut self.rng);
 
         for i1 in 0..self.inner.len() {
-            if let Some(i2) = self
-                .inner
-                .iter()
-                .position(|e| e.percentage() == self[i1].percentage() && e != &self[i1])
-            {
+            if let Some(i2) = self.inner.iter().position(|e| {
+                (e.percentage() - self[i1].percentage()).abs() < f64::EPSILON && e != &self[i1]
+            }) {
                 return Some((i1, i2));
             }
         }

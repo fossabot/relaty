@@ -20,7 +20,7 @@ impl VoteStrategy {
         match self {
             VoteStrategy::Random => Box::new(RelVec::random_pair),
             VoteStrategy::OneMin => Box::new(RelVec::min_pair),
-            VoteStrategy::Equal => Box::new(RelVec::equal_pair)
+            VoteStrategy::Equal => Box::new(RelVec::equal_pair),
         }
     }
 }
@@ -30,7 +30,7 @@ impl ToString for VoteStrategy {
         match self {
             VoteStrategy::Random => "random".to_owned(),
             VoteStrategy::OneMin => "onemin".to_owned(),
-            VoteStrategy::Equal => "equal".to_owned()
+            VoteStrategy::Equal => "equal".to_owned(),
         }
     }
 }
@@ -61,7 +61,7 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
         let (a, b) = choose(&mut rv).ok_or(Error::ArgError)?;
 
         println!("{} vs. {}", rv[a].name, rv[b].name);
-        println!("");
+        println!();
         println!("1 - Vote for {}", rv[a].name);
         println!("2 - Vote for {}", rv[b].name);
         println!("o - Can't decide");
@@ -74,26 +74,23 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
         let mut cmd = String::new();
         let _s = reader.read_line(&mut cmd)?;
 
-        match cmd.chars().next() {
-            Some(c) => {
-                if c == '1' {
-                    rv[a].wins += 1;
-                    rv[a].votes += 1;
-                    rv[b].votes += 1;
-                } else if c == '2' {
-                    rv[b].wins += 1;
-                    rv[a].votes += 1;
-                    rv[b].votes += 1;
-                } else if c == 'o' {
-                } else if c == 'x' {
-                    rv.inner.remove(a);
-                } else if c == 'y' {
-                    rv.inner.remove(b);
-                } else {
-                    println!("unknown command");
-                }
+        if let Some(c) = cmd.chars().next() {
+            if c == '1' {
+                rv[a].wins += 1;
+                rv[a].votes += 1;
+                rv[b].votes += 1;
+            } else if c == '2' {
+                rv[b].wins += 1;
+                rv[a].votes += 1;
+                rv[b].votes += 1;
+            } else if c == 'o' {
+            } else if c == 'x' {
+                rv.inner.remove(a);
+            } else if c == 'y' {
+                rv.inner.remove(b);
+            } else {
+                println!("unknown command");
             }
-            None => {}
         }
 
         println!("======================");
