@@ -4,9 +4,13 @@ extern crate serde_derive;
 mod commands;
 mod error;
 mod rel_vec;
+mod vote;
 
-use crate::commands::{add, create, new, remove, vote};
+use std::convert::TryInto;
+
+use crate::commands::{add, create, new, remove};
 use crate::error::Error;
+use crate::vote::{vote, VoteStrategy};
 use clap::{App, Arg, SubCommand};
 use commands::{from, print_file, print_screen};
 
@@ -182,6 +186,15 @@ fn main() -> Result<(), Error> {
                         .takes_value(true)
                         .index(2)
                         .default_value("10"),
+                )
+                .arg(
+                    Arg::with_name("strategy")
+                        .short("s")
+                        .value_name("STRATEGY")
+                        .help("Strategy to use")
+                        .takes_value(true)
+                        .default_value("random")
+                        .possible_values(&VoteStrategy::strategies()),
                 ),
         )
         .get_matches();
@@ -242,8 +255,13 @@ fn main() -> Result<(), Error> {
             .value_of("rounds")
             .ok_or(Error::ArgError)?
             .parse::<u32>()?;
+        let strategy: VoteStrategy = matches
+            .value_of("strategy")
+            .ok_or(Error::ArgError)?
+            .try_into()?;
 
-        return vote(input, output, rounds);
+        println!("Using strategy \"{}\"", strategy.to_string());
+        return vote(input, output, rounds, strategy.choose_function());
     }
 
     Ok(())

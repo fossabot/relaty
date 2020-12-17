@@ -1,6 +1,6 @@
 use crate::error::Error;
+use rand::rngs::ThreadRng;
 use rand::Rng;
-use rand::{prelude::SliceRandom, rngs::ThreadRng};
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::{cmp::Ordering, io::Read};
@@ -402,21 +402,7 @@ mod tests {
             rng: rand::thread_rng(),
         };
 
-        assert_eq!(
-            rv._min_votes(),
-            Vec::from([
-                &mut RelEntry {
-                    name: "abc".to_string(),
-                    wins: 12,
-                    votes: 123,
-                },
-                &mut RelEntry {
-                    name: "bcd".to_string(),
-                    wins: 125,
-                    votes: 123
-                }
-            ])
-        );
+        assert_eq!(rv.min_votes(), [0, 1].to_vec());
     }
 
     #[test]

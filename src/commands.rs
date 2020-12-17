@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{self, BufWriter, Write},
+    io::{BufWriter, Write},
 };
 
 use clap::Values;
@@ -74,55 +74,6 @@ pub(crate) fn remove(input: &str, output: &str, filter: &str) -> Result<(), Erro
     let re = Regex::new(filter)?;
 
     rv.remove(|i| re.is_match(&i.name));
-
-    rv.save(output)
-}
-
-pub(crate) fn vote(input: &str, output: &str, rounds: u32) -> Result<(), Error> {
-    let mut rv = RelVec::load(input)?;
-    let reader = io::stdin();
-
-    for _ in 0..rounds {
-        let (a, b) = rv.random_pair().ok_or(Error::ArgError)?;
-
-        println!("{} vs. {}", rv[a].name, rv[b].name);
-        println!("");
-        println!("1 - Vote for {}", rv[a].name);
-        println!("2 - Vote for {}", rv[b].name);
-        println!("o - Can't decide");
-        println!("x - Remove {}", rv[a].name);
-        println!("y - Remove {}", rv[b].name);
-        print!("$ ");
-
-        io::stdout().flush()?;
-
-        let mut cmd = String::new();
-        let _s = reader.read_line(&mut cmd)?;
-
-        match cmd.chars().next() {
-            Some(c) => {
-                if c == '1' {
-                    rv[a].wins += 1;
-                    rv[a].votes += 1;
-                    rv[b].votes += 1;
-                } else if c == '2' {
-                    rv[b].wins += 1;
-                    rv[a].votes += 1;
-                    rv[b].votes += 1;
-                } else if c == 'o' {
-                } else if c == 'x' {
-                    rv.inner.remove(a);
-                } else if c == 'y' {
-                    rv.inner.remove(b);
-                } else {
-                    println!("unknown command");
-                }
-            }
-            None => {}
-        }
-
-        println!("======================");
-    }
 
     rv.save(output)
 }
