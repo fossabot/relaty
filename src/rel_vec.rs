@@ -1,6 +1,6 @@
 use crate::error::Error;
-use rand::rngs::ThreadRng;
 use rand::Rng;
+use rand::{prelude::SliceRandom, rngs::ThreadRng};
 use std::io::{BufRead, BufReader, BufWriter};
 use std::path::Path;
 use std::{cmp::Ordering, io::Read};
@@ -155,19 +155,19 @@ impl RelVec {
             })
     }
 
-    pub fn _min_votes(&mut self) -> Vec<&mut RelEntry> {
+    pub fn min_votes(&mut self) -> Vec<usize> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
-        for item in &mut self.inner {
-            match item.votes.cmp(&min) {
+        for i in 0..self.inner.len() {
+            match self[i].votes.cmp(&min) {
                 Ordering::Less => {
-                    min = item.votes;
+                    min = self[i].votes;
                     v = Vec::new();
-                    v.push(item);
+                    v.push(i);
                 }
                 Ordering::Equal => {
-                    v.push(item);
+                    v.push(i);
                 }
                 Ordering::Greater => {}
             }
@@ -182,22 +182,27 @@ impl RelVec {
         }
 
         let i1 = self.rng.gen_range(0, self.inner.len());
-        let mut i2 = self.rng.gen_range(0, self.inner.len() - 1);
+        let i2 = self.rng.gen_range(0, self.inner.len() - 1);
         if i2 >= i1 {
-            i2 += 1;
+            Some((i1, i2 + 1))
+        } else {
+            Some((i1, i2))
+        }
+    }
+
+    pub fn min_pair(&mut self) -> Option<(usize, usize)> {
+        if self.inner.len() < 2 {
+            return None;
         }
 
-        Some((i1, i2))
-
-        /*if i1 < i2 {
-            let (a, b) = self.inner.split_at_mut(i2);
-
-            Some((&mut a[i1], &mut b[0]))
+        let mins = self.min_votes();
+        let i1 = mins[self.rng.gen_range(0, mins.len())];
+        let i2 = self.rng.gen_range(0, self.inner.len() - 1);
+        if i2 >= i1 {
+            Some((i1, i2 + 1))
         } else {
-            let (a, b) = self.inner.split_at_mut(i1);
-
-            Some((&mut b[0], &mut a[i2]))
-        }*/
+            Some((i1, i2))
+        }
     }
 }
 
@@ -435,6 +440,6 @@ mod tests {
 
         let (a, b) = rv.random_pair().unwrap();
 
-        assert!((a,b) == (0,1) || (a, b) == (1,0));
+        assert!((a, b) == (0, 1) || (a, b) == (1, 0));
     }
 }
