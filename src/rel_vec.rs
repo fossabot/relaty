@@ -216,14 +216,42 @@ impl RelVec {
 
         self.inner.shuffle(&mut self.rng);
 
-        for i1 in 0..self.inner.len() {
-            for i2 in i1 + 1..self.inner.len() {
+        for i1 in 0..self.len() {
+            for i2 in i1 + 1..self.len() {
                 if (self[i2].percentage() - self[i1].percentage()).abs() < f64::EPSILON {
                     return Some((i1, i2));
                 }
             }
         }
         None
+    }
+
+    pub fn nearest_pair(&mut self) -> Option<(usize, usize)> {
+        if self.len() < 2 {
+            return None;
+        }
+
+        self.inner.shuffle(&mut self.rng);
+
+        let mut min = None;
+
+        for i1 in 0..self.len() {
+            for i2 in i1 + 1..self.len() {
+                let d2 = (self[i2].percentage() - self[i1].percentage()).abs();
+                match min {
+                    Some((_, _, d)) => {
+                        if d2 < d {
+                            min = Some((i1, i2, d2));
+                        }
+                    }
+                    None => {
+                        min = Some((i1, i2, d2));
+                    }
+                }
+            }
+        }
+
+        min.map(|(a, b, _)| (a, b))
     }
 
     pub fn min_equal_pair(&mut self) -> Option<(usize, usize)> {
