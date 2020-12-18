@@ -225,6 +225,14 @@ impl RelVec {
         }
         None
     }
+
+    pub fn min_equal_pair(&mut self) -> Option<(usize, usize)> {
+        if self.rng.gen_bool(0.5) {
+            self.equal_pair()
+        } else {
+            self.min_pair()
+        }
+    }
 }
 
 impl PartialEq for RelVec {

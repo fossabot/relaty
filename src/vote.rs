@@ -9,11 +9,12 @@ pub enum VoteStrategy {
     Random,
     OneMin,
     Equal,
+    MinEqual,
 }
 
 impl VoteStrategy {
-    pub fn strategies() -> [&'static str; 3] {
-        ["random", "onemin", "equal"]
+    pub fn strategies() -> [&'static str; 4] {
+        ["random", "onemin", "equal", "minequal"]
     }
 
     pub fn choose_function(&self) -> Box<dyn FnMut(&mut RelVec) -> Option<(usize, usize)>> {
@@ -21,6 +22,7 @@ impl VoteStrategy {
             VoteStrategy::Random => Box::new(RelVec::random_pair),
             VoteStrategy::OneMin => Box::new(RelVec::min_pair),
             VoteStrategy::Equal => Box::new(RelVec::equal_pair),
+            VoteStrategy::MinEqual => Box::new(RelVec::min_equal_pair),
         }
     }
 }
@@ -31,6 +33,7 @@ impl ToString for VoteStrategy {
             VoteStrategy::Random => "random".to_owned(),
             VoteStrategy::OneMin => "onemin".to_owned(),
             VoteStrategy::Equal => "equal".to_owned(),
+            VoteStrategy::MinEqual => "minequal".to_owned(),
         }
     }
 }
@@ -43,6 +46,7 @@ impl TryFrom<&str> for VoteStrategy {
             "random" => Ok(VoteStrategy::Random),
             "onemin" => Ok(VoteStrategy::OneMin),
             "equal" => Ok(VoteStrategy::Equal),
+            "minequal" => Ok(VoteStrategy::MinEqual),
             _ => Err(Error::ArgError),
         }
     }
