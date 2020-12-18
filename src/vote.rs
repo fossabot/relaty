@@ -85,9 +85,9 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
                 rv[b].votes += 1;
             } else if c == 'o' {
             } else if c == 'x' {
-                rv.inner.remove(a);
+                (*rv).remove(a);
             } else if c == 'y' {
-                rv.inner.remove(b);
+                (*rv).remove(b);
             } else {
                 println!("unknown command");
             }

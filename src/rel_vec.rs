@@ -1,14 +1,17 @@
 use crate::error::Error;
 use rand::Rng;
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
-use std::io::{BufRead, BufReader, BufWriter};
-use std::path::Path;
 use std::{cmp::Ordering, io::Read};
 use std::{fs::File, io::Write};
 use std::{
     io,
     ops::{Index, IndexMut},
 };
+use std::{
+    io::{BufRead, BufReader, BufWriter},
+    ops::Deref,
+};
+use std::{ops::DerefMut, path::Path};
 
 static FILE_PREFIX: [u8; 2] = [173, 42];
 
@@ -26,6 +29,34 @@ impl RelEntry {
 
     pub fn percentage(&self) -> f64 {
         f64::from(self.wins) * 100.0 / f64::from(self.votes)
+    }
+
+    pub fn compare_percentage(&self, other: &RelEntry) -> Ordering {
+        let ap = self.percentage();
+        let bp = other.percentage();
+
+        match bp.partial_cmp(&ap) {
+            Some(ordering) => ordering,
+            None => {
+                if ap.is_nan() {
+                    if bp.is_nan() {
+                        match self.name.partial_cmp(&other.name) {
+                            Some(ordering) => ordering,
+                            None => Ordering::Equal,
+                        }
+                    } else {
+                        Ordering::Greater
+                    }
+                } else if bp.is_nan() {
+                    Ordering::Less
+                } else {
+                    match self.name.partial_cmp(&other.name) {
+                        Some(ordering) => ordering,
+                        None => Ordering::Equal,
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -117,49 +148,22 @@ impl RelVec {
     }
 
     pub fn add(&mut self, name: String) {
-        self.inner.push(name.into());
+        self.push(name.into());
     }
 
     pub fn remove<F: FnMut(&RelEntry) -> bool>(&mut self, mut filter: F) {
-        self.inner.retain(|i| !filter(i))
+        self.retain(|i| !filter(i))
     }
 
     pub fn sort_percentage(&mut self) {
-        self.inner
-            .sort_by(|a: &RelEntry, b: &RelEntry| -> Ordering {
-                let ap = a.percentage();
-                let bp = b.percentage();
-
-                match bp.partial_cmp(&ap) {
-                    Some(ordering) => ordering,
-                    None => {
-                        if ap.is_nan() {
-                            if bp.is_nan() {
-                                match a.name.partial_cmp(&b.name) {
-                                    Some(ordering) => ordering,
-                                    None => Ordering::Equal,
-                                }
-                            } else {
-                                Ordering::Greater
-                            }
-                        } else if bp.is_nan() {
-                            Ordering::Less
-                        } else {
-                            match a.name.partial_cmp(&b.name) {
-                                Some(ordering) => ordering,
-                                None => Ordering::Equal,
-                            }
-                        }
-                    }
-                }
-            })
+        self.sort_by(|a: &RelEntry, b: &RelEntry| a.compare_percentage(b))
     }
 
     pub fn min_votes(&mut self) -> Vec<usize> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
-        for i in 0..self.inner.len() {
+        for i in 0..self.len() {
             match self[i].votes.cmp(&min) {
                 Ordering::Less => {
                     min = self[i].votes;
@@ -177,12 +181,12 @@ impl RelVec {
     }
 
     pub fn random_pair(&mut self) -> Option<(usize, usize)> {
-        if self.inner.len() < 2 {
+        if self.len() < 2 {
             return None;
         }
 
-        let i1 = self.rng.gen_range(0, self.inner.len());
-        let i2 = self.rng.gen_range(0, self.inner.len() - 1);
+        let i1 = self.rng.gen_range(0, self.len());
+        let i2 = self.rng.gen_range(0, self.len() - 1);
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {
@@ -191,13 +195,13 @@ impl RelVec {
     }
 
     pub fn min_pair(&mut self) -> Option<(usize, usize)> {
-        if self.inner.len() < 2 {
+        if self.len() < 2 {
             return None;
         }
 
         let mins = self.min_votes();
         let i1 = mins[self.rng.gen_range(0, mins.len())];
-        let i2 = self.rng.gen_range(0, self.inner.len() - 1);
+        let i2 = self.rng.gen_range(0, self.len() - 1);
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {
@@ -206,14 +210,14 @@ impl RelVec {
     }
 
     pub fn equal_pair(&mut self) -> Option<(usize, usize)> {
-        if self.inner.len() < 2 {
+        if self.len() < 2 {
             return None;
         }
 
         self.inner.shuffle(&mut self.rng);
 
         for i1 in 0..self.inner.len() {
-            if let Some(i2) = self.inner.iter().position(|e| {
+            if let Some(i2) = self.iter().position(|e| {
                 (e.percentage() - self[i1].percentage()).abs() < f64::EPSILON && e != &self[i1]
             }) {
                 return Some((i1, i2));
@@ -226,6 +230,20 @@ impl RelVec {
 impl PartialEq for RelVec {
     fn eq(&self, other: &Self) -> bool {
         self.inner == other.inner
+    }
+}
+
+impl Deref for RelVec {
+    type Target = Vec<RelEntry>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl DerefMut for RelVec {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
     }
 }
 

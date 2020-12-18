@@ -8,7 +8,7 @@ mod vote;
 
 use std::convert::TryInto;
 
-use crate::commands::{add, create, new, remove};
+use crate::commands::{add, create, new, remove, stats};
 use crate::error::Error;
 use crate::vote::{vote, VoteStrategy};
 use clap::{App, Arg, SubCommand};
@@ -158,6 +158,21 @@ fn main() -> Result<(), Error> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("stats")
+                .about("Show stats about a list")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FIILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("vote")
                 .about("Vote several times")
                 .version("0.1.0")
@@ -246,6 +261,12 @@ fn main() -> Result<(), Error> {
         let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
 
         return remove(input, output, filter);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("stats") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+
+        return stats(input);
     }
 
     if let Some(matches) = matches.subcommand_matches("vote") {
