@@ -53,6 +53,7 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
     output: &str,
     rounds: u32,
     mut choose: F,
+    info: bool,
 ) -> Result<(), Error> {
     let mut rv = RelVec::load(input)?;
     let reader = io::stdin();
@@ -60,10 +61,28 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
     for _ in 0..rounds {
         let (a, b) = choose(&mut rv).ok_or(Error::ArgError)?;
 
-        println!("{} vs. {}", rv[a].name, rv[b].name);
+        if info {
+            println!(
+                "(1) {} ({}/{} = {}%)",
+                rv[a].name,
+                rv[a].wins,
+                rv[a].votes,
+                rv[a].percentage()
+            );
+            println!("      vs.");
+            println!(
+                "(2) {} ({}/{} = {}%)",
+                rv[b].name,
+                rv[b].wins,
+                rv[b].votes,
+                rv[b].percentage()
+            );
+        } else {
+            println!("(1) {}", rv[a].name);
+            println!("      vs.");
+            println!("(2) {}", rv[b].name);
+        }
         println!();
-        println!("1 - Vote for {}", rv[a].name);
-        println!("2 - Vote for {}", rv[b].name);
         println!("o - Can't decide");
         println!("x - Remove {}", rv[a].name);
         println!("y - Remove {}", rv[b].name);

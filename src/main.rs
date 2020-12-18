@@ -210,6 +210,11 @@ fn main() -> Result<(), Error> {
                         .takes_value(true)
                         .default_value("random")
                         .possible_values(&VoteStrategy::strategies()),
+                )
+                .arg(
+                    Arg::with_name("info")
+                    .short("i")
+                    .help("Shows additional information")
                 ),
         )
         .get_matches();
@@ -280,9 +285,10 @@ fn main() -> Result<(), Error> {
             .value_of("strategy")
             .ok_or(Error::ArgError)?
             .try_into()?;
+        let info = matches.is_present("info");
 
         println!("Using strategy \"{}\"", strategy.to_string());
-        return vote(input, output, rounds, strategy.choose_function());
+        return vote(input, output, rounds, strategy.choose_function(), info);
     }
 
     Ok(())
