@@ -217,10 +217,10 @@ impl RelVec {
         self.inner.shuffle(&mut self.rng);
 
         for i1 in 0..self.inner.len() {
-            if let Some(i2) = self.iter().position(|e| {
-                (e.percentage() - self[i1].percentage()).abs() < f64::EPSILON && e != &self[i1]
-            }) {
-                return Some((i1, i2));
+            for i2 in i1 + 1..self.inner.len() {
+                if (self[i2].percentage() - self[i1].percentage()).abs() < f64::EPSILON {
+                    return Some((i1, i2));
+                }
             }
         }
         None
