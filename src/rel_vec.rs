@@ -228,7 +228,10 @@ impl RelVec {
 
     pub fn min_equal_pair(&mut self) -> Option<(usize, usize)> {
         if self.rng.gen_bool(0.5) {
-            self.equal_pair()
+            match self.equal_pair() {
+                Some((a, b)) => Some((a, b)),
+                None => self.min_pair(),
+            }
         } else {
             self.min_pair()
         }
