@@ -96,6 +96,7 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
         println!("o - Can't decide");
         println!("x - Remove {}", rv[a].name);
         println!("y - Remove {}", rv[b].name);
+        println!("q - Quit");
         print!("$ ");
 
         io::stdout().flush()?;
@@ -117,6 +118,8 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
                 (*rv).remove(a);
             } else if c == 'y' {
                 (*rv).remove(b);
+            } else if c == 'q' {
+                return rv.save(output);
             } else {
                 println!("unknown command");
             }
