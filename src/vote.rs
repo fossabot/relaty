@@ -63,7 +63,13 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
     let reader = io::stdin();
 
     for _ in 0..rounds {
-        let (a, b) = choose(&mut rv).ok_or(Error::ArgError)?;
+        let (a, b) = match choose(&mut rv) {
+            Some((a, b)) => (a, b),
+            None => {
+                println!("There is no matching pair.");
+                return rv.save(output);
+            }
+        };
 
         if info {
             println!(

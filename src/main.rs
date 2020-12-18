@@ -213,8 +213,8 @@ fn main() -> Result<(), Error> {
                 )
                 .arg(
                     Arg::with_name("info")
-                    .short("i")
-                    .help("Shows additional information")
+                        .short("i")
+                        .help("Shows additional information"),
                 ),
         )
         .get_matches();
