@@ -77,30 +77,30 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
 
         if info {
             println!(
-                "(1) {} ({}/{} = {}%)",
+                "\x1b[34m(1)\x1b[0m {} \x1b[90m({}/{} = {}%)\x1b[0m",
                 rv[a].name,
                 rv[a].wins,
                 rv[a].votes,
                 rv[a].percentage()
             );
-            println!("      vs.");
+            println!("      \x1b[31;4mvs.\x1b[0m");
             println!(
-                "(2) {} ({}/{} = {}%)",
+                "\x1b[34m(2)\x1b[0m {} \x1b[90m({}/{} = {}%)\x1b[0m",
                 rv[b].name,
                 rv[b].wins,
                 rv[b].votes,
                 rv[b].percentage()
             );
         } else {
-            println!("(1) {}", rv[a].name);
+            println!("\x1b[34m(1)\x1b[0m {}", rv[a].name);
             println!("      vs.");
-            println!("(2) {}", rv[b].name);
+            println!("\x1b[34m(2)\x1b[0m {}", rv[b].name);
         }
         println!();
-        println!("o - Can't decide");
-        println!("x - Remove {}", rv[a].name);
-        println!("y - Remove {}", rv[b].name);
-        println!("q - Quit");
+        println!("\x1b[35mo\x1b[0m - Can't decide");
+        println!("\x1b[35mx\x1b[0m - Remove {}", rv[a].name);
+        println!("\x1b[35my\x1b[0m - Remove {}", rv[b].name);
+        println!("\x1b[35mq\x1b[0m - Quit");
         print!("$ ");
 
         io::stdout().flush()?;
@@ -125,7 +125,7 @@ pub(crate) fn vote<F: FnMut(&mut RelVec) -> Option<(usize, usize)> + Sized>(
             } else if c == 'q' {
                 return rv.save(output);
             } else {
-                println!("unknown command");
+                println!("\x1b[31munknown command\x1b[0m");
             }
         }
 
