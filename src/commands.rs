@@ -99,25 +99,25 @@ pub(crate) fn stats(input: &str) -> Result<(), Error> {
         .map(|i| i.votes);
     let votes: u32 = rv.iter().map(|i| i.votes).sum();
 
-    println!("Number of entries: {}", rv.len());
+    println!("Number of entries: \x1b[34m{}\x1b[0m", rv.len());
     println!();
 
     if let Some(min_p) = min_p {
-        println!("Minimum percentage: {}", min_p);
+        println!("Minimum percentage: \x1b[34m{}\x1b[0m", min_p);
     }
     if let Some(max_p) = max_p {
-        println!("Maximum percentage: {}", max_p);
+        println!("Maximum percentage: \x1b[34m{}\x1b[0m", max_p);
     }
     println!();
 
     if let Some(min_v) = min_v {
-        println!("Minimum votes: {}", min_v);
+        println!("Minimum votes: \x1b[34m{}\x1b[0m", min_v);
     }
     if let Some(max_v) = max_v {
-        println!("Maximum votes: {}", max_v);
+        println!("Maximum votes: \x1b[34m{}\x1b[0m", max_v);
     }
     println!();
-    println!("Number of votes: {} (est.)", votes / 2);
+    println!("Number of votes: \x1b[34m{}\x1b[0m (est.)", votes / 2);
 
     Ok(())
 }
