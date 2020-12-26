@@ -79,6 +79,7 @@ pub(crate) fn remove(input: &str, output: &str, filter: &str) -> Result<(), Erro
 }
 
 pub(crate) fn stats(input: &str) -> Result<(), Error> {
+    // TODO Use one loop
     let rv = RelVec::load(input)?;
 
     let min_p = rv
@@ -108,6 +109,30 @@ pub(crate) fn stats(input: &str) -> Result<(), Error> {
     if let Some(max_p) = max_p {
         println!("Maximum percentage: \x1b[34m{}\x1b[0m", max_p);
     }
+    for i in &[0.0, 10.0, 20.0, 30.0, 40.0, 50.0, 60.0, 70.0, 80.0] {
+        let c = rv
+            .iter()
+            .filter(|e| e.percentage() >= *i && e.percentage() < i + 10.0)
+            .count();
+        println!(
+            "\x1b[33m[{:0>3},{:0>3})\x1b[0m: \x1b[34m{}\x1b[0m \x1b[31m{}\x1b[0m",
+            i,
+            i + 10.0,
+            "|".repeat(c / 5),
+            c
+        );
+    }
+    {
+        let c = rv
+            .iter()
+            .filter(|e| e.percentage() >= 90.0 && e.percentage() <= 100.0)
+            .count();
+        println!(
+            "\x1b[33m[090,100]\x1b[0m: \x1b[34m{}\x1b[0m \x1b[31m{}\x1b[0m",
+            "|".repeat(c / 5),
+            c
+        );
+    }
     println!();
 
     if let Some(min_v) = min_v {
@@ -115,6 +140,22 @@ pub(crate) fn stats(input: &str) -> Result<(), Error> {
     }
     if let Some(max_v) = max_v {
         println!("Maximum votes: \x1b[34m{}\x1b[0m", max_v);
+    }
+    if let Some(min_v) = min_v {
+        if let Some(max_v) = max_v {
+            let pad = max_v.to_string().len(); // TODO Improve
+
+            for i in min_v..(max_v + 1) {
+                let c = rv.iter().filter(|e| e.votes == i).count();
+                println!(
+                    "\x1b[33m{}{}\x1b[0m: \x1b[34m{}\x1b[0m \x1b[31m{}\x1b[0m",
+                    " ".repeat(pad - i.to_string().len()),
+                    i,
+                    "|".repeat(c / 5),
+                    c
+                );
+            }
+        }
     }
     println!();
     println!("Number of votes: \x1b[34m{}\x1b[0m (est.)", votes / 2);

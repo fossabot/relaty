@@ -160,7 +160,7 @@ fn main() -> Result<(), Error> {
         .subcommand(
             SubCommand::with_name("stats")
                 .about("Show stats about a list")
-                .version("0.1.0")
+                .version("0.2.0")
                 .author("Lichthagel <lichthagel@tuta.io>")
                 .arg(
                     Arg::with_name("file")
