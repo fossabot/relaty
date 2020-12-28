@@ -32,31 +32,10 @@ impl RelEntry {
     }
 
     pub fn compare_percentage(&self, other: &RelEntry) -> Ordering {
-        let ap = self.percentage();
-        let bp = other.percentage();
+        let ap = self.wins * other.votes;
+        let bp = other.wins * self.votes;
 
-        match bp.partial_cmp(&ap) {
-            Some(ordering) => ordering,
-            None => {
-                if ap.is_nan() {
-                    if bp.is_nan() {
-                        match self.name.partial_cmp(&other.name) {
-                            Some(ordering) => ordering,
-                            None => Ordering::Equal,
-                        }
-                    } else {
-                        Ordering::Greater
-                    }
-                } else if bp.is_nan() {
-                    Ordering::Less
-                } else {
-                    match self.name.partial_cmp(&other.name) {
-                        Some(ordering) => ordering,
-                        None => Ordering::Equal,
-                    }
-                }
-            }
-        }
+        return bp.cmp(&ap);
     }
 }
 
