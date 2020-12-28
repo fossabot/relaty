@@ -29,6 +29,10 @@ You may use `relaty <CMD> --help` to see information on the usage of different c
 
 `relaty remove <FILE> <FILTER>` remove entries from a file. `<FILTER>` is a regular expression ([Syntax](https://docs.rs/regex/1.4.2/regex/#syntax))
 
+#### Options
+
+- `-o <OUTPUT>`: Use a separate output file.
+
 ### reset
 
 `relaty reset <FILE> <FILTER>` reset entries in a file. `<FILTER>` is a regular expression ([Syntax](https://docs.rs/regex/1.4.2/regex/#syntax))

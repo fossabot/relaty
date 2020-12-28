@@ -130,7 +130,7 @@ fn main() -> Result<(), Error> {
         .subcommand(
             SubCommand::with_name("remove")
                 .about("Remove elements from a list")
-                .version("0.1.0")
+                .version("0.1.1")
                 .author("Lichthagel <lichthagel@tuta.io>")
                 .arg(
                     Arg::with_name("file")

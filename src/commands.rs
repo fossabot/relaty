@@ -73,9 +73,32 @@ pub(crate) fn remove(input: &str, output: &str, filter: &str) -> Result<(), Erro
     let mut rv = RelVec::load(input)?;
     let re = Regex::new(filter)?;
 
-    rv.remove(|i| re.is_match(&i.name));
+    for i in rv.iter().filter(|i| re.is_match(&i.name)) {
+        println!("{}", i.to_string());
+    }
 
-    rv.save(output)
+    println!("\x1b[31mDo you want to remove these entries? [y/N]\x1b[0m");
+    let mut ans = String::new();
+    let reader = io::stdin();
+    let _s = reader.read_line(&mut ans)?;
+
+    match ans.chars().next() {
+        Some(c) => match c {
+            'y' | 'Y' => {
+                rv.remove(|i| re.is_match(&i.name));
+
+                rv.save(output)
+            }
+            _ => {
+                println!("Nothing resetted");
+                rv.save(output)
+            }
+        },
+        None => {
+            println!("Nothing resetted");
+            rv.save(output)
+        }
+    }
 }
 
 pub(crate) fn reset(input: &str, output: &str, filter: &str) -> Result<(), Error> {
