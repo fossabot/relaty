@@ -165,7 +165,7 @@ impl RelVec {
         }
 
         let i1 = self.rng.gen_range(0..self.len());
-        let i2 = self.rng.gen_range(0..self.len() - 1);
+        let i2 = self.rng.gen_range(0..(self.len() - 1));
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {

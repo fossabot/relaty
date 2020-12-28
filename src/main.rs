@@ -51,7 +51,7 @@ fn main() -> Result<(), Error> {
                 .arg(
                     Arg::with_name("input")
                         .short("i")
-                        .value_name("OUTPUT")
+                        .value_name("INPUT")
                         .help("Input file")
                         .required(true)
                         .takes_value(true)
