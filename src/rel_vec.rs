@@ -164,8 +164,8 @@ impl RelVec {
             return None;
         }
 
-        let i1 = self.rng.gen_range(0, self.len());
-        let i2 = self.rng.gen_range(0, self.len() - 1);
+        let i1 = self.rng.gen_range(0..self.len());
+        let i2 = self.rng.gen_range(0..self.len() - 1);
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {
@@ -179,8 +179,8 @@ impl RelVec {
         }
 
         let mins = self.min_votes();
-        let i1 = mins[self.rng.gen_range(0, mins.len())];
-        let i2 = self.rng.gen_range(0, self.len() - 1);
+        let i1 = mins[self.rng.gen_range(0..mins.len())];
+        let i2 = self.rng.gen_range(0..(self.len() - 1));
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {
