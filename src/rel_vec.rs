@@ -27,6 +27,11 @@ impl RelEntry {
         RelEntry { name, wins, votes }
     }
 
+    pub fn reset(&mut self) {
+        self.wins = 0;
+        self.votes = 0;
+    }
+
     pub fn percentage(&self) -> f64 {
         f64::from(self.wins) * 100.0 / f64::from(self.votes)
     }
@@ -35,7 +40,7 @@ impl RelEntry {
         let ap = self.wins * other.votes;
         let bp = other.wins * self.votes;
 
-        return bp.cmp(&ap);
+        bp.cmp(&ap)
     }
 }
 

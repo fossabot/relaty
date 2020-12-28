@@ -8,7 +8,7 @@ mod vote;
 
 use std::convert::TryInto;
 
-use crate::commands::{add, create, new, remove, stats};
+use crate::commands::{add, create, new, remove, reset, stats};
 use crate::error::Error;
 use crate::vote::{vote, VoteStrategy};
 use clap::{App, Arg, SubCommand};
@@ -158,6 +158,36 @@ fn main() -> Result<(), Error> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("reset")
+                .about("Reset entries to 0/0")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("filter")
+                        .value_name("FILTER")
+                        .help("Filter")
+                        .required(true)
+                        .takes_value(true)
+                        .index(2),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("stats")
                 .about("Show stats about a list")
                 .version("0.2.0")
@@ -266,6 +296,14 @@ fn main() -> Result<(), Error> {
         let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
 
         return remove(input, output, filter);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("reset") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+        let output = matches.value_of("output").unwrap_or(input);
+        let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
+
+        return reset(input, output, filter);
     }
 
     if let Some(matches) = matches.subcommand_matches("stats") {

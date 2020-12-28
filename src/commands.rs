@@ -1,6 +1,6 @@
 use std::{
     fs::File,
-    io::{BufWriter, Write},
+    io::{self, BufWriter, Write},
 };
 
 use clap::Values;
@@ -76,6 +76,40 @@ pub(crate) fn remove(input: &str, output: &str, filter: &str) -> Result<(), Erro
     rv.remove(|i| re.is_match(&i.name));
 
     rv.save(output)
+}
+
+pub(crate) fn reset(input: &str, output: &str, filter: &str) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+    let re = Regex::new(filter)?;
+
+    for i in rv.iter().filter(|i| re.is_match(&i.name)) {
+        println!("{}", i.to_string());
+    }
+
+    println!("\x1b[31mDo you want to reset these entries? [y/N]\x1b[0m");
+    let mut ans = String::new();
+    let reader = io::stdin();
+    let _s = reader.read_line(&mut ans)?;
+
+    match ans.chars().next() {
+        Some(c) => match c {
+            'y' | 'Y' => {
+                rv.iter_mut()
+                    .filter(|i| re.is_match(&i.name))
+                    .for_each(|i| i.reset());
+
+                rv.save(output)
+            }
+            _ => {
+                println!("Nothing resetted");
+                rv.save(output)
+            }
+        },
+        None => {
+            println!("Nothing resetted");
+            rv.save(output)
+        }
+    }
 }
 
 pub(crate) fn stats(input: &str) -> Result<(), Error> {
