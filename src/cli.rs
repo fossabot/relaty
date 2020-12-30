@@ -4,7 +4,7 @@ use crate::vote::VoteStrategy;
 
 pub(crate) fn build_cli() -> App<'static, 'static> {
     App::new("relaty")
-        .version("0.1.0")
+        .version("0.1.1")
         .about("Helps you sort and rate stuff")
         .author("Lichthagel <lichthagel@tuta.io>")
         .subcommand(
