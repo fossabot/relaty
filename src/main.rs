@@ -1,253 +1,22 @@
 #[macro_use]
 extern crate serde_derive;
 
+mod cli;
 mod commands;
 mod error;
 mod rel_vec;
 mod vote;
 
-use std::convert::TryInto;
+use std::{convert::TryInto, io, str::FromStr};
 
 use crate::commands::{add, create, new, remove, reset, stats};
 use crate::error::Error;
 use crate::vote::{vote, VoteStrategy};
-use clap::{App, Arg, SubCommand};
+use clap::Shell;
 use commands::{from, print_file, print_screen};
 
 fn main() -> Result<(), Error> {
-    let matches = App::new("relaty")
-        .version("0.1.0")
-        .about("Helps you sort and rate stuff")
-        .author("Lichthagel <lichthagel@tuta.io>")
-        .subcommand(
-            SubCommand::with_name("new")
-                .about("Create an empty file")
-                .version("0.1.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("item")
-                        .short("i")
-                        .value_name("ITEM")
-                        .help("Insert item")
-                        .takes_value(true)
-                        .multiple(true)
-                        .index(2),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("from")
-                .about("Create data from a text file")
-                .version("0.1.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("input")
-                        .short("i")
-                        .value_name("INPUT")
-                        .help("Input file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(2),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("print")
-                .about("Print a file to screen or to a file")
-                .version("0.1.0")
-                .author("Lichthagle <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .takes_value(true)
-                        .index(2),
-                )
-                .arg(
-                    Arg::with_name("filter")
-                        .short("f")
-                        .value_name("filter")
-                        .help("Filter items by name")
-                        .takes_value(true),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("add")
-                .about("Add elements to a storage file")
-                .version("0.1.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("item")
-                        .value_name("ITEM")
-                        .help("Item to add")
-                        .multiple(true)
-                        .takes_value(true)
-                        .index(2),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("remove")
-                .about("Remove elements from a list")
-                .version("0.1.1")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("filter")
-                        .value_name("FILTER")
-                        .help("Filter")
-                        .required(true)
-                        .takes_value(true)
-                        .index(2),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("reset")
-                .about("Reset entries to 0/0")
-                .version("0.1.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("filter")
-                        .value_name("FILTER")
-                        .help("Filter")
-                        .required(true)
-                        .takes_value(true)
-                        .index(2),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("stats")
-                .about("Show stats about a list")
-                .version("0.2.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FIILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                ),
-        )
-        .subcommand(
-            SubCommand::with_name("vote")
-                .about("Vote several times")
-                .version("0.1.0")
-                .author("Lichthagel <lichthagel@tuta.io>")
-                .arg(
-                    Arg::with_name("file")
-                        .short("f")
-                        .value_name("FILE")
-                        .help("List file")
-                        .required(true)
-                        .takes_value(true)
-                        .index(1),
-                )
-                .arg(
-                    Arg::with_name("output")
-                        .short("o")
-                        .value_name("OUTPUT")
-                        .help("Output file")
-                        .takes_value(true),
-                )
-                .arg(
-                    Arg::with_name("rounds")
-                        .short("r")
-                        .value_name("ROUNDS")
-                        .help("Number of rounds")
-                        .takes_value(true)
-                        .index(2)
-                        .default_value("10"),
-                )
-                .arg(
-                    Arg::with_name("strategy")
-                        .short("s")
-                        .value_name("STRATEGY")
-                        .help("Strategy to use")
-                        .takes_value(true)
-                        .default_value("random")
-                        .possible_values(&VoteStrategy::strategies()),
-                )
-                .arg(
-                    Arg::with_name("info")
-                        .short("i")
-                        .help("Shows additional information"),
-                ),
-        )
-        .get_matches();
+    let matches = crate::cli::build_cli().get_matches();
 
     if let Some(matches) = matches.subcommand_matches("new") {
         if let Some(items) = matches.values_of("item") {
@@ -327,6 +96,16 @@ fn main() -> Result<(), Error> {
 
         println!("Using strategy \"{}\"", strategy.to_string());
         return vote(input, output, rounds, strategy.choose_function(), info);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("completions") {
+        let shell = matches.value_of("shell").ok_or(Error::ArgError)?;
+
+        cli::build_cli().gen_completions_to(
+            "relaty",
+            Shell::from_str(shell).map_err(|_| Error::ArgError)?,
+            &mut io::stdout(),
+        );
     }
 
     Ok(())
