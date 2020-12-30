@@ -37,10 +37,11 @@ impl RelEntry {
     }
 
     pub fn compare_percentage(&self, other: &RelEntry) -> Ordering {
+        // TODO NaN should be handled different
         let ap = self.wins * other.votes;
         let bp = other.wins * self.votes;
 
-        bp.cmp(&ap)
+        ap.cmp(&bp)
     }
 }
 
@@ -140,7 +141,7 @@ impl RelVec {
     }
 
     pub fn sort_percentage(&mut self) {
-        self.sort_by(|a: &RelEntry, b: &RelEntry| a.compare_percentage(b))
+        self.sort_by(|a: &RelEntry, b: &RelEntry| a.compare_percentage(b).reverse())
     }
 
     pub fn min_votes(&mut self) -> Vec<usize> {
@@ -299,6 +300,7 @@ impl IndexMut<usize> for RelVec {
 #[cfg(test)]
 mod tests {
     use std::{
+        cmp::Ordering,
         fs::{self, File},
         io::{BufWriter, Write},
     };
@@ -314,7 +316,74 @@ mod tests {
                 votes: 12551
             },
             RelEntry::new("abc".to_owned(), 125132, 12551)
-        )
+        );
+    }
+
+    #[test]
+    fn rel_entry_reset() {
+        let a = RelEntry {
+            name: "abc".to_owned(),
+            wins: 0,
+            votes: 0,
+        };
+        let mut b = RelEntry {
+            name: "abc".to_owned(),
+            wins: 125132,
+            votes: 12551,
+        };
+
+        b.reset();
+
+        assert_eq!(a, b);
+    }
+
+    #[test]
+    fn rel_entry_percentage() {
+        let mut e = RelEntry::new("abc".to_owned(), 0, 0);
+
+        assert!(e.percentage().is_nan());
+
+        e.votes = 1;
+
+        assert_eq!(e.percentage(), 0.0);
+
+        e.wins = 1;
+
+        assert_eq!(e.percentage(), 100.0);
+
+        e.votes = 2;
+
+        assert_eq!(e.percentage(), 50.0);
+
+        e.wins = 125;
+        e.votes = 312;
+
+        assert_eq!(e.percentage(), 40.06410256410256);
+    }
+
+    #[test]
+    fn rel_entry_compare_percentage() {
+        let mut a = RelEntry::new("abc".to_owned(), 0, 0);
+        let mut b = RelEntry::new("abc".to_owned(), 0, 0);
+
+        assert_eq!(a.compare_percentage(&b), Ordering::Equal);
+
+        b.votes = 1;
+
+        assert_eq!(a.compare_percentage(&b), Ordering::Equal);
+
+        a.wins = 1;
+        a.votes = 2;
+
+        assert_eq!(a.compare_percentage(&b), Ordering::Greater);
+
+        b.wins = 1;
+
+        assert_eq!(a.compare_percentage(&b), Ordering::Less);
+
+        b.votes = 2;
+
+        assert_eq!(a.compare_percentage(&b), Ordering::Equal);
     }
 
     #[test]
@@ -434,6 +503,68 @@ mod tests {
         fs::remove_file("_rel_vec_save.txt").unwrap();
 
         assert_eq!(&a, b.as_slice());
+    }
+
+    #[test]
+    fn rel_vec_add() {
+        let mut rv = RelVec {
+            inner: Vec::new(),
+            rng: rand::thread_rng(),
+        };
+
+        rv.add("abc".to_owned());
+
+        assert_eq!(
+            rv,
+            RelVec {
+                inner: [RelEntry::new("abc".to_owned(), 0, 0)].to_vec(),
+                rng: rand::thread_rng()
+            }
+        )
+    }
+
+    #[test]
+    fn rel_vec_remove() {
+        let mut rv = RelVec {
+            inner: [RelEntry::new("abc".to_owned(), 0, 0)].to_vec(),
+            rng: rand::thread_rng(),
+        };
+
+        rv.remove(|entry| entry.name.len() == 3);
+
+        assert_eq!(rv, RelVec::new());
+    }
+
+    #[test]
+    fn rel_vec_sort_percentage() {
+        let mut rv = RelVec {
+            inner: [
+                RelEntry::new("bec".to_owned(), 1, 1),
+                RelEntry::new("ads".to_owned(), 1, 2),
+                RelEntry::new("foo".to_owned(), 3, 4),
+                RelEntry::new("bar".to_owned(), 1, 4),
+                RelEntry::new("abc".to_owned(), 0, 0),
+            ]
+            .to_vec(),
+            rng: rand::thread_rng(),
+        };
+
+        rv.sort_percentage();
+
+        assert_eq!(
+            rv,
+            RelVec {
+                inner: [
+                    RelEntry::new("bec".to_owned(), 1, 1),
+                    RelEntry::new("foo".to_owned(), 3, 4),
+                    RelEntry::new("ads".to_owned(), 1, 2),
+                    RelEntry::new("bar".to_owned(), 1, 4),
+                    RelEntry::new("abc".to_owned(), 0, 0),
+                ]
+                .to_vec(),
+                rng: rand::thread_rng(),
+            }
+        );
     }
 
     #[test]
