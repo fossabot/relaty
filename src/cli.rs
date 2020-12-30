@@ -186,6 +186,66 @@ pub(crate) fn build_cli() -> App<'static, 'static> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("lock")
+                .about("Lock entries")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("filter")
+                        .value_name("FILTER")
+                        .help("Filter")
+                        .required(true)
+                        .takes_value(true)
+                        .index(2),
+                ),
+        )
+        .subcommand(
+            SubCommand::with_name("unlock")
+                .about("Unlock entries")
+                .version("0.1.0")
+                .author("Lichthagel <lichthagel@tuta.io>")
+                .arg(
+                    Arg::with_name("file")
+                        .short("f")
+                        .value_name("FILE")
+                        .help("List file")
+                        .required(true)
+                        .takes_value(true)
+                        .index(1),
+                )
+                .arg(
+                    Arg::with_name("output")
+                        .short("o")
+                        .value_name("OUTPUT")
+                        .help("Output file")
+                        .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("filter")
+                        .value_name("FILTER")
+                        .help("Filter")
+                        .required(true)
+                        .takes_value(true)
+                        .index(2),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("stats")
                 .about("Show stats about a list")
                 .version("0.2.0")

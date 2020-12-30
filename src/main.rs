@@ -13,7 +13,7 @@ use crate::commands::{add, create, new, remove, reset, stats};
 use crate::error::Error;
 use crate::vote::{vote, VoteStrategy};
 use clap::Shell;
-use commands::{from, print_file, print_screen};
+use commands::{from, lock, print_file, print_screen};
 
 fn main() -> Result<(), Error> {
     let matches = crate::cli::build_cli().get_matches();
@@ -77,6 +77,22 @@ fn main() -> Result<(), Error> {
         let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
 
         return reset(input, output, filter);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("lock") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+        let output = matches.value_of("output").unwrap_or(input);
+        let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
+
+        return lock(input, output, filter, true);
+    }
+
+    if let Some(matches) = matches.subcommand_matches("unlock") {
+        let input = matches.value_of("file").ok_or(Error::ArgError)?;
+        let output = matches.value_of("output").unwrap_or(input);
+        let filter = matches.value_of("filter").ok_or(Error::ArgError)?;
+
+        return lock(input, output, filter, false);
     }
 
     if let Some(matches) = matches.subcommand_matches("stats") {

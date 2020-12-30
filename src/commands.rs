@@ -161,6 +161,43 @@ pub(crate) fn reset(input: &str, output: &str, filter: &str) -> Result<(), Error
     }
 }
 
+pub(crate) fn lock(input: &str, output: &str, filter: &str, lock: bool) -> Result<(), Error> {
+    let mut rv = RelVec::load(input)?;
+    let re = Regex::new(filter)?;
+
+    for i in rv.iter().filter(|i| re.is_match(&i.name)) {
+        println!("{}", i.to_string());
+    }
+
+    println!(
+        "\x1b[31mDo you want to {}lock these entries? [y/N]\x1b[0m",
+        if lock { "" } else { "un" }
+    );
+    let mut ans = String::new();
+    let reader = io::stdin();
+    let _s = reader.read_line(&mut ans)?;
+
+    match ans.chars().next() {
+        Some(c) => match c {
+            'y' | 'Y' => {
+                rv.iter_mut()
+                    .filter(|i| re.is_match(&i.name))
+                    .for_each(|i| i.locked = lock);
+
+                rv.save(output)
+            }
+            _ => {
+                println!("Nothing {}locked", if lock { "" } else { "un" });
+                rv.save(output)
+            }
+        },
+        None => {
+            println!("Nothing {}locked", if lock { "" } else { "un" });
+            rv.save(output)
+        }
+    }
+}
+
 pub(crate) fn stats(input: &str) -> Result<(), Error> {
     // TODO Use one loop
     let rv = RelVec::load(input)?;
