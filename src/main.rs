@@ -41,11 +41,15 @@ fn main() -> Result<(), Error> {
                 matches.value_of("file").ok_or(Error::ArgError)?,
                 matches.value_of("output").ok_or(Error::ArgError)?,
                 matches.value_of("filter"),
+                matches.is_present("linenumbers"),
+                matches.is_present("nameonly"),
             );
         } else {
             return print_screen(
                 matches.value_of("file").ok_or(Error::ArgError)?,
                 matches.value_of("filter"),
+                matches.is_present("linenumbers"),
+                matches.is_present("nameonly"),
             );
         }
     }
@@ -107,8 +111,10 @@ fn main() -> Result<(), Error> {
             &mut io::stdout(),
         );
 
-        return Ok(())
+        return Ok(());
     }
 
-    cli::build_cli().print_long_help().map_err(|_| Error::ArgError)
+    cli::build_cli()
+        .print_long_help()
+        .map_err(|_| Error::ArgError)
 }

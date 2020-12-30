@@ -83,6 +83,16 @@ pub(crate) fn build_cli() -> App<'static, 'static> {
                         .value_name("filter")
                         .help("Filter items by name")
                         .takes_value(true),
+                )
+                .arg(
+                    Arg::with_name("linenumbers")
+                        .short("n")
+                        .help("Print line numbers"),
+                )
+                .arg(
+                    Arg::with_name("nameonly")
+                        .short("N")
+                        .help("Only print the entry name"),
                 ),
         )
         .subcommand(

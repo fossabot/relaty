@@ -26,7 +26,12 @@ pub(crate) fn from(input: &str, output: &str) -> Result<(), Error> {
     rv.save(output)
 }
 
-pub(crate) fn print_screen(input: &str, filter: Option<&str>) -> Result<(), Error> {
+pub(crate) fn print_screen(
+    input: &str,
+    filter: Option<&str>,
+    linenumbers: bool,
+    nameonly: bool,
+) -> Result<(), Error> {
     let mut rv = RelVec::load(input)?;
     let re = match filter {
         Some(filter) => Regex::new(filter)?,
@@ -34,14 +39,27 @@ pub(crate) fn print_screen(input: &str, filter: Option<&str>) -> Result<(), Erro
     };
 
     rv.sort_percentage();
-    for i in rv.iter().filter(|i| re.is_match(&i.name)) {
-        println!("{}", i.to_string());
+    for (i, e) in rv.iter().enumerate().filter(|(_, e)| re.is_match(&e.name)) {
+        if linenumbers {
+            print!("{}  ", i + 1);
+        }
+        if nameonly {
+            println!("{}", e.name);
+        } else {
+            println!("{}", e.to_string());
+        }
     }
 
     Ok(())
 }
 
-pub(crate) fn print_file(input: &str, output: &str, filter: Option<&str>) -> Result<(), Error> {
+pub(crate) fn print_file(
+    input: &str,
+    output: &str,
+    filter: Option<&str>,
+    linenumbers: bool,
+    nameonly: bool,
+) -> Result<(), Error> {
     let mut rv = RelVec::load(input)?;
     let output = File::create(output)?;
     let mut writer = BufWriter::new(output);
@@ -51,8 +69,16 @@ pub(crate) fn print_file(input: &str, output: &str, filter: Option<&str>) -> Res
     };
 
     rv.sort_percentage();
-    for i in rv.iter().filter(|i| re.is_match(&i.name)) {
-        writer.write_all(i.to_string().as_bytes())?;
+    for (i, e) in rv.iter().enumerate().filter(|(_, e)| re.is_match(&e.name)) {
+        if linenumbers {
+            writer.write_all((i + 1).to_string().as_bytes())?;
+            writer.write_all(b"  ")?;
+        }
+        if nameonly {
+            writer.write_all(e.name.as_bytes())?;
+        } else {
+            writer.write_all(e.to_string().as_bytes())?;
+        }
         writer.write_all(b"\n")?;
     }
 
