@@ -141,11 +141,11 @@ pub(crate) fn stats(input: &str) -> Result<(), Error> {
 
     let min_p = rv
         .iter()
-        .min_by(|a, b| b.compare_percentage(a))
+        .min_by(|a, b| a.compare_percentage(b))
         .map(|i| i.percentage());
     let max_p = rv
         .iter()
-        .max_by(|a, b| b.compare_percentage(a))
+        .max_by(|a, b| a.compare_percentage(b))
         .map(|i| i.percentage());
     let min_v = rv
         .iter()
