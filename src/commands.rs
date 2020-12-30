@@ -38,10 +38,13 @@ pub(crate) fn print_screen(
         None => Regex::new(".*?")?,
     };
 
+    let pad = rv.len().to_string().len(); // TODO improve
+
     rv.sort_percentage();
     for (i, e) in rv.iter().enumerate().filter(|(_, e)| re.is_match(&e.name)) {
         if linenumbers {
-            print!("{}  ", i + 1);
+            let x = (i + 1).to_string();
+            print!("{}{}  ", " ".repeat(pad - x.len()), x);
         }
         if nameonly {
             println!("{}", e.name);
@@ -68,10 +71,14 @@ pub(crate) fn print_file(
         None => Regex::new(".*?")?,
     };
 
+    let pad = rv.len().to_string().len(); // TODO improve
+
     rv.sort_percentage();
     for (i, e) in rv.iter().enumerate().filter(|(_, e)| re.is_match(&e.name)) {
         if linenumbers {
-            writer.write_all((i + 1).to_string().as_bytes())?;
+            let x = (i + 1).to_string();
+            writer.write_all(&b" ".repeat(pad - x.len()))?;
+            writer.write_all(x.as_bytes())?;
             writer.write_all(b"  ")?;
         }
         if nameonly {
