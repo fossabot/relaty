@@ -15,19 +15,30 @@ use std::{ops::DerefMut, path::Path};
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RelEntry {
+    #[serde(rename = "n")]
     pub name: String,
+    #[serde(rename = "w", default)]
     pub wins: u32,
+    #[serde(rename = "v", default)]
     pub votes: u32,
+    #[serde(rename = "l", default)]
+    pub locked: bool,
 }
 
 impl RelEntry {
     pub fn new(name: String, wins: u32, votes: u32) -> RelEntry {
-        RelEntry { name, wins, votes }
+        RelEntry {
+            name,
+            wins,
+            votes,
+            locked: false,
+        }
     }
 
     pub fn reset(&mut self) {
         self.wins = 0;
         self.votes = 0;
+        self.locked = false;
     }
 
     pub fn percentage(&self) -> f64 {
@@ -52,11 +63,12 @@ impl PartialEq for RelEntry {
 impl ToString for RelEntry {
     fn to_string(&self) -> String {
         format!(
-            "{} - {}/{} - {}%",
+            "{} - {}/{} - {}%{}",
             self.name,
             self.wins,
             self.votes,
-            self.percentage()
+            self.percentage(),
+            if self.locked { " [L]" } else { "" }
         )
     }
 }
@@ -131,11 +143,23 @@ impl RelVec {
         self.sort_by(|a: &RelEntry, b: &RelEntry| a.compare_percentage(b).reverse())
     }
 
+    pub fn reduced(&self) -> Vec<usize> {
+        self.inner
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| !e.locked)
+            .map(|(i, _)| i)
+            .collect()
+    }
+
     pub fn min_votes(&mut self) -> Vec<usize> {
         let mut min = u32::max_value();
         let mut v = Vec::new();
 
         for i in 0..self.len() {
+            if self[i].locked {
+                continue;
+            }
             match self[i].votes.cmp(&min) {
                 Ordering::Less => {
                     min = self[i].votes;
@@ -153,27 +177,30 @@ impl RelVec {
     }
 
     pub fn random_pair(&mut self) -> Option<(usize, usize)> {
-        if self.len() < 2 {
+        let reduced: Vec<usize> = self.reduced();
+
+        if reduced.len() < 2 {
             return None;
         }
 
-        let i1 = self.rng.gen_range(0..self.len());
-        let i2 = self.rng.gen_range(0..(self.len() - 1));
+        let i1 = self.rng.gen_range(0..reduced.len());
+        let i2 = self.rng.gen_range(0..(reduced.len() - 1));
         if i2 >= i1 {
-            Some((i1, i2 + 1))
+            Some((reduced[i1], reduced[i2 + 1]))
         } else {
-            Some((i1, i2))
+            Some((reduced[i1], reduced[i2]))
         }
     }
 
     pub fn min_pair(&mut self) -> Option<(usize, usize)> {
-        if self.len() < 2 {
+        let reduced = self.reduced();
+        let mins = self.min_votes();
+        if reduced.len() < 2 {
             return None;
         }
 
-        let mins = self.min_votes();
         let i1 = mins[self.rng.gen_range(0..mins.len())];
-        let i2 = self.rng.gen_range(0..(self.len() - 1));
+        let i2 = reduced[self.rng.gen_range(0..(reduced.len() - 1))];
         if i2 >= i1 {
             Some((i1, i2 + 1))
         } else {
@@ -182,16 +209,20 @@ impl RelVec {
     }
 
     pub fn equal_pair(&mut self) -> Option<(usize, usize)> {
-        if self.len() < 2 {
+        let mut reduced = self.reduced();
+
+        if reduced.len() < 2 {
             return None;
         }
 
-        self.inner.shuffle(&mut self.rng);
+        reduced.shuffle(&mut self.rng);
 
-        for i1 in 0..self.len() {
-            for i2 in i1 + 1..self.len() {
-                if (self[i2].percentage() - self[i1].percentage()).abs() < f64::EPSILON {
-                    return Some((i1, i2));
+        for i1 in 0..reduced.len() {
+            for i2 in i1 + 1..reduced.len() {
+                if (self[reduced[i2]].percentage() - self[reduced[i1]].percentage()).abs()
+                    < f64::EPSILON
+                {
+                    return Some((reduced[i1], reduced[i2]));
                 }
             }
         }
@@ -199,17 +230,19 @@ impl RelVec {
     }
 
     pub fn nearest_pair(&mut self) -> Option<(usize, usize)> {
-        if self.len() < 2 {
+        let mut reduced = self.reduced();
+
+        if reduced.len() < 2 {
             return None;
         }
 
-        self.inner.shuffle(&mut self.rng);
+        reduced.shuffle(&mut self.rng);
 
         let mut min = None;
 
-        for i1 in 0..self.len() {
-            for i2 in i1 + 1..self.len() {
-                let d2 = (self[i2].percentage() - self[i1].percentage()).abs();
+        for i1 in 0..reduced.len() {
+            for i2 in i1 + 1..reduced.len() {
+                let d2 = (self[reduced[i2]].percentage() - self[reduced[i1]].percentage()).abs();
                 match min {
                     Some((_, _, d)) => {
                         if d2 < d {
@@ -223,7 +256,7 @@ impl RelVec {
             }
         }
 
-        min.map(|(a, b, _)| (a, b))
+        min.map(|(a, b, _)| (reduced[a], reduced[b]))
     }
 
     pub fn min_equal_pair(&mut self) -> Option<(usize, usize)> {
@@ -300,7 +333,8 @@ mod tests {
             RelEntry {
                 name: "abc".to_owned(),
                 wins: 125132,
-                votes: 12551
+                votes: 12551,
+                locked: false
             },
             RelEntry::new("abc".to_owned(), 125132, 12551)
         );
@@ -312,11 +346,13 @@ mod tests {
             name: "abc".to_owned(),
             wins: 0,
             votes: 0,
+            locked: false,
         };
         let mut b = RelEntry {
             name: "abc".to_owned(),
             wins: 125132,
             votes: 12551,
+            locked: true,
         };
 
         b.reset();
@@ -379,11 +415,13 @@ mod tests {
             name: "abc".to_owned(),
             wins: 125132,
             votes: 1263,
+            locked: false,
         };
         let b = RelEntry {
             name: "abc".to_owned(),
             wins: 1251,
             votes: 1361621,
+            locked: false,
         };
 
         assert_eq!(a, b);
@@ -395,6 +433,7 @@ mod tests {
             name: "abc".to_owned(),
             wins: 12,
             votes: 36,
+            locked: false,
         };
 
         assert_eq!(a.to_string(), "abc - 12/36 - 33.333333333333336%");
@@ -406,6 +445,7 @@ mod tests {
             name: "abc".to_owned(),
             wins: 0,
             votes: 0,
+            locked: false,
         };
         let b = "abc".to_owned().into();
 
@@ -460,12 +500,15 @@ mod tests {
         let mut writer = BufWriter::new(file);
 
         writer
-            .write_all(b"[{\"name\":\"abc\",\"wins\":0,\"votes\":0}]")
+            .write_all(b"[{\"n\":\"abc\",\"w\":2,\"v\":3}]")
             .unwrap();
 
         drop(writer);
 
-        let a = RelVec::create(["abc".to_string()].to_vec());
+        let a = RelVec {
+            inner: [RelEntry::new("abc".to_owned(), 2, 3)].to_vec(),
+            rng: rand::thread_rng(),
+        };
         let b = RelVec::load("_rel_vec_load.txt").unwrap();
 
         fs::remove_file("_rel_vec_load.txt").unwrap();
@@ -478,7 +521,7 @@ mod tests {
         let rv = RelVec::create(["abc".to_string()].to_vec());
         rv.save("_rel_vec_save.txt").unwrap();
 
-        let a = b"[{\"name\":\"abc\",\"wins\":0,\"votes\":0}]";
+        let a = b"[{\"n\":\"abc\",\"w\":0,\"v\":0,\"l\":false}]";
         let b = fs::read("_rel_vec_save.txt").unwrap();
 
         fs::remove_file("_rel_vec_save.txt").unwrap();
@@ -556,16 +599,25 @@ mod tests {
                     name: "abc".to_string(),
                     wins: 12,
                     votes: 123,
+                    locked: false,
                 },
                 RelEntry {
                     name: "bcd".to_string(),
                     wins: 125,
                     votes: 123,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 0,
+                    votes: 0,
+                    locked: true,
                 },
                 RelEntry {
                     name: "cde".to_string(),
                     wins: 12,
                     votes: 12632,
+                    locked: false,
                 },
             ]
             .to_vec(),
@@ -577,24 +629,191 @@ mod tests {
 
     #[test]
     fn rel_vec_random_pair() {
+        for _ in 0..5 {
+            let mut rv = RelVec {
+                inner: [
+                    RelEntry {
+                        name: "abc".to_string(),
+                        wins: 0,
+                        votes: 0,
+                        locked: false,
+                    },
+                    RelEntry {
+                        name: "locked".to_string(),
+                        wins: 0,
+                        votes: 0,
+                        locked: true,
+                    },
+                    RelEntry {
+                        name: "def".to_string(),
+                        wins: 0,
+                        votes: 0,
+                        locked: false,
+                    },
+                ]
+                .to_vec(),
+                rng: rand::thread_rng(),
+            };
+
+            let (a, b) = rv.random_pair().unwrap();
+
+            assert!((a, b) == (0, 2) || (a, b) == (2, 0));
+        }
+    }
+
+    #[test]
+    fn rel_vec_min_pair() {
         let mut rv = RelVec {
             inner: [
                 RelEntry {
                     name: "abc".to_string(),
                     wins: 0,
+                    votes: 2,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 0,
                     votes: 0,
+                    locked: true,
                 },
                 RelEntry {
                     name: "def".to_string(),
                     wins: 0,
-                    votes: 0,
+                    votes: 1,
+                    locked: false,
                 },
             ]
             .to_vec(),
             rng: rand::thread_rng(),
         };
 
-        let (a, b) = rv.random_pair().unwrap();
+        let (a, b) = rv.min_pair().unwrap();
+
+        assert_eq!((a, b), (2, 0))
+    }
+
+    #[test]
+    fn rel_vec_equal_pair() {
+        let mut rv = RelVec {
+            inner: [
+                RelEntry {
+                    name: "abc".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 1,
+                    votes: 1,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "def".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: false,
+                },
+            ]
+            .to_vec(),
+            rng: rand::thread_rng(),
+        };
+
+        let (a, b) = rv.equal_pair().unwrap();
+
+        assert!((a, b) == (0, 2) || (a, b) == (2, 0));
+    }
+
+    #[test]
+    fn rel_vec_equal_pair_fail() {
+        let mut rv = RelVec {
+            inner: [
+                RelEntry {
+                    name: "abc".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 1,
+                    votes: 1,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "def".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: true,
+                },
+            ]
+            .to_vec(),
+            rng: rand::thread_rng(),
+        };
+
+        assert_eq!(rv.equal_pair(), None);
+    }
+
+    #[test]
+    fn rel_vec_nearest_pair() {
+        let mut rv = RelVec {
+            inner: [
+                RelEntry {
+                    name: "abc".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 1,
+                    votes: 1,
+                    locked: true,
+                },
+                RelEntry {
+                    name: "def".to_string(),
+                    wins: 5,
+                    votes: 8,
+                    locked: false,
+                },
+            ]
+            .to_vec(),
+            rng: rand::thread_rng(),
+        };
+
+        let (a, b) = rv.nearest_pair().unwrap();
+
+        assert!((a, b) == (0, 2) || (a, b) == (2, 0));
+    }
+
+    #[test]
+    fn rel_vec_nearest_pair_two() {
+        let mut rv = RelVec {
+            inner: [
+                RelEntry {
+                    name: "abc".to_string(),
+                    wins: 1,
+                    votes: 2,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "locked".to_string(),
+                    wins: 1,
+                    votes: 1,
+                    locked: false,
+                },
+                RelEntry {
+                    name: "def".to_string(),
+                    wins: 5,
+                    votes: 8,
+                    locked: true,
+                },
+            ]
+            .to_vec(),
+            rng: rand::thread_rng(),
+        };
+        let (a, b) = rv.nearest_pair().unwrap();
 
         assert!((a, b) == (0, 1) || (a, b) == (1, 0));
     }
