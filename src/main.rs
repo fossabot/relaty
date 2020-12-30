@@ -106,7 +106,9 @@ fn main() -> Result<(), Error> {
             Shell::from_str(shell).map_err(|_| Error::ArgError)?,
             &mut io::stdout(),
         );
+
+        return Ok(())
     }
 
-    Ok(())
+    cli::build_cli().print_long_help().map_err(|_| Error::ArgError)
 }
