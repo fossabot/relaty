@@ -1,8 +1,8 @@
 use crate::error::Error;
 use rand::Rng;
 use rand::{prelude::SliceRandom, rngs::ThreadRng};
-use std::{cmp::Ordering, io::Read};
-use std::{fs::File, io::Write};
+use std::cmp::Ordering;
+use std::fs::File;
 use std::{
     io,
     ops::{Index, IndexMut},
@@ -12,8 +12,6 @@ use std::{
     ops::Deref,
 };
 use std::{ops::DerefMut, path::Path};
-
-static FILE_PREFIX: [u8; 2] = [173, 42];
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct RelEntry {
@@ -105,30 +103,19 @@ impl RelVec {
 
     pub fn load<P: AsRef<Path>>(file: P) -> Result<Self, Error> {
         let f = File::open(file)?;
-        let mut reader = BufReader::new(f);
-
-        {
-            let mut buf = [0u8; 2];
-            reader.read_exact(&mut buf)?;
-
-            if buf != FILE_PREFIX {
-                return Err(Error::InvalidFileError);
-            }
-        }
+        let reader = BufReader::new(f);
 
         Ok(Self {
-            inner: bincode::deserialize_from(reader)?,
+            inner: serde_json::from_reader(reader)?,
             rng: rand::thread_rng(),
         })
     }
 
     pub fn save<P: AsRef<Path>>(&self, file: P) -> Result<(), Error> {
         let f = File::create(file)?;
-        let mut writer = BufWriter::new(f);
+        let writer = BufWriter::new(f);
 
-        writer.write_all(&FILE_PREFIX)?;
-
-        bincode::serialize_into(writer, &self.inner)?;
+        serde_json::to_writer(writer, &self.inner)?;
         Ok(())
     }
 
