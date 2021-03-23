@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 clap = "2.33.3"
-serde = "1.0.124"
+serde = "1.0.125"
 serde_derive = "1.0.124"
 serde_json = "1.0.64"
 rand = "0.8.3"
