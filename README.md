@@ -1,4 +1,6 @@
 # relaty
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLichthagel%2Frelaty.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FLichthagel%2Frelaty?ref=badge_shield)
+
 
 This small cli app helps you rank and rate stuff based on how items compare to each other.
 
@@ -70,3 +72,6 @@ You may use `relaty <CMD> --help` to see information on the usage of different c
 - `equal`: Choose two entries with equal percentage.
 - `minequal`: Choose between `onemin` and `equal` randomly (Chance is 50/50).
 - `nearest`: Similar to `equal`. Chooses the entries nearest to each other.
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLichthagel%2Frelaty.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FLichthagel%2Frelaty?ref=badge_large)
